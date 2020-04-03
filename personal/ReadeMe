@@ -1,0 +1,6 @@
+1. create new branch in terminal using git checkout -b your_name_surname
+2. add new folder under ./personal with you name_surname
+3. add new folders:
+  - R #this folder will contain all of your scripts
+  - data #you will store data used for analysis in here
+  - reports  #you could store reports from you work in here
