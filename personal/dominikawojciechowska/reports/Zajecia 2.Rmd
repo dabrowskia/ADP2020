@@ -1,0 +1,70 @@
+---
+title: "Zajęcia 2"
+author: "Dominika Wojciechowska"
+date: "4 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Zadanie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r}
+library("sf")
+library("raster")
+library("spData")
+library("spDataLarge")
+library ("dplyr")
+
+plot(world[world$continent=="Europe","pop"])
+summary(world["pop"])
+
+# 2 rozwiązanie
+
+world %>%
+  filter(continent == "Europe") %>%
+  select(pop) %>%
+  plot()
+
+
+```
+
+## Zadanie 2
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r}
+
+world[world$pop==min(world$pop, na.rm=TRUE),c("name_long", "pop")]
+
+# 2 rozwiązanie
+
+world %>% 
+  filter(pop == min(world$pop, na.rm=TRUE)) %>%
+  select(name_long, pop)
+
+
+ 
+
+```
+
+## Zadanie 3
+
+Ile krajów znajduje się w Azji?
+
+```{r}
+
+
+  
+
+
+```
+
+
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+
