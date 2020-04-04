@@ -1,0 +1,59 @@
+---
+title: "Zajecia2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Zadanie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+
+
+```{r cars}
+library(sf)
+library(raster)
+library(spData)
+EU<- world[world$continent=="Europe","pop"]
+plot(EU)
+```
+
+# Zadanie 2
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r pressure, echo=FALSE}
+min<-min(world$pop, na.rm=TRUE)
+wo<-world[world$pop==min,"name_long",na.rm=TRUE]
+plot(wo)
+
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+# zadanie 3
+
+Ile krajów znajduje się w Azji?
+```{r}
+Azja<-world[world$continent=="Asia",]
+nrow(Azja)
+```
+
+# Zadanie 4
+
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+```{r}
+worldHist<-world[world$type=="Sovereign country",]
+hist(worldHist$area_km2)
+```
+
+# Zadanie 5
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+```{r}
+plot(world$lifeExp,world$gdpPercap)
+```
+
