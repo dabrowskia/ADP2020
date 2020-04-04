@@ -14,6 +14,7 @@ library("dplyr")
 ```
 **CTRL+SHIFT+K** - to compile the file
 
+# world dataset tasks
 
 **Wyświetlcie mapę krajów Europejskich  wg liczby ludności**
 ```{r}
@@ -63,13 +64,13 @@ new_raster
 plot(new_raster)
 ```
 
-## Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+** Jaka jest maksymalna wysokość w danym obrazie rastrowym?**
 ```{r}
 max(new_raster[], na.rm = TRUE)
 ```
 
 
-## Jaki jest rozkład wartości obrazu rastrowego?
+** Jaki jest rozkład wartości obrazu rastroweg**
 ```{r}
 hist(new_raster, maxpixels=250000)
 ```
