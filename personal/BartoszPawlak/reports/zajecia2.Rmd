@@ -1,0 +1,20 @@
+---
+title: "Zajęcia2"
+author: "Bartosz Pawlak"
+date: "4 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+```
+
+## Zadanie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r}
+
+```
