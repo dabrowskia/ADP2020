@@ -1,0 +1,75 @@
+---
+title: "zajecia 2"
+author: "M grzegorzewska"
+date: "4 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+install.packages("sf")
+install.packages("raster")
+install.packages('tidyverse')
+install.packages('fs')
+install.packages('spData')
+install.packages('dplyr')
+
+
+devtools::install_github("spDataLarge",repos = "http://Nowosad.github.io/drat",type = "source")
+devtools::install_github("Nowosa/spDataLarge")
+
+library(devtools)
+library(fs)
+library(raster)
+library(spData)
+library(sf)
+library(dplyr)
+
+```
+
+## Zadnaie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r zad 1}
+install.packages("sf")
+install.packages("raster")
+install.packages('tidyverse')
+install.packages('fs')
+install.packages('spData')
+install.packages('dplyr')
+
+
+devtools::install_github("spDataLarge",repos = "http://Nowosad.github.io/drat",type = "source")
+devtools::install_github("Nowosa/spDataLarge")
+
+library(devtools)
+library(fs)
+library(raster)
+library(spData)
+library(sf)
+library(dplyr)
+
+```
+
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
