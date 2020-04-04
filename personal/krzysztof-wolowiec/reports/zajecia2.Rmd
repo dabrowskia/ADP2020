@@ -5,20 +5,50 @@ date: "4 04 2020"
 output: html_document
 ---
 
-## ZADANIE 1
+## Biblioteki
+```{r}
+library('sf')
+library("raster")
+library("spData")
+library("dplyr")
+```
 **CTRL+SHIFT+K** - to compile the file
 
-Wy
-```{r cars}
-install.packages('sf')
-install.packages("raster")
+## ZADANIE 1
+**Wyświetlcie mapę krajów Europejskich  wg liczby ludności**
+```{r}
+world %>% 
+  filter(continent == 'Europe') %>%
+  select(pop) %>%
+  plot()
 ```
 
-## Including Plots
-You can also embed plots, for example:
+**Który kraj posiada najmniejszą liczbę ludności i ile wynosi?**
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+world %>%
+  filter(pop == min(world$pop, na.rm = TRUE)) %>%
+  select(name_long, pop)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+**Ile krajów znajduje się w Azji?**
+```{r}
+world %>%
+  filter(continent=='Asia') %>%
+  count()
+```
+
+
+**Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)**
+```{r}
+world %>%
+  filter(type == "Sovereign country") %>%
+  select(area_km2) -> areas
+
+hist(areas$area_km2)
+```
+
+**Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap**
+```{r}
+plot(x=world$lifeExp, y=world$gdpPercap)
+```
