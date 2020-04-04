@@ -49,3 +49,24 @@ Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
 ```{r}
 world %>% ggplot(aes(x = lifeExp, y = gdpPercap)) + geom_point()
 ```
+
+## Zadanie 6
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+plot(new_raster)
+max(new_raster)
+```
+
+## Zadanie 7
+Jaki jest rozkład wartości obrazu rastrowego? (histogram)
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+hist(new_raster,
+     main = "Raster histogram",
+     col = "springgreen")
+```
