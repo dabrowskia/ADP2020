@@ -11,6 +11,7 @@ library(sf)
 library(raster)
 library(spData)
 library(dplyr)
+library(ggplot2)
 ```
 
 
@@ -33,6 +34,8 @@ head(posortowane,1)
 
 Ile krajów znajduje się w Azji?
 ```{r}
+world1=subset(world,continent == 'Asia')
+nrow(world1)
 
 ```
 
