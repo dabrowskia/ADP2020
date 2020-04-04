@@ -8,34 +8,43 @@ output: html_document
 ```
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(sf)
 library(raster)
 library(tidyverse)
 library(dplyr)
 library(ggplot2)
-
+library(spData)
+library(devtools)
+library(fs)
 ```
 
 ## Zadanie 1
-
 Wyświetlcie mapę krajów Europejskich wg liczby ludności
 
-
-
-
-Wyświetlcie mapę krajów Europejskich wg liczby ludności.
-Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
-Ile krajów znajduje się w Azji?
-Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country).
-Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r nazwa}
+plot(world[world$continent == 'Europe','pop'])
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Zadanie 2
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+
+
+## Zadanie 3
+Ile krajów znajduje się w Azji?
+
+
+
+## Zadanie 4
+Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country).
+
+```{r nazwa2}
+world %>%
+  filter(type == 'Sovereign country') %>%
+  ggplot(aes(x = pop)) +
+  geom_histogram()
+```
+
+## Zadanie 5
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
