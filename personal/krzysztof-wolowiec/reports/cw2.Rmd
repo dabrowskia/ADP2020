@@ -14,7 +14,7 @@ library("dplyr")
 ```
 **CTRL+SHIFT+K** - to compile the file
 
-## ZADANIE 1
+
 **Wyświetlcie mapę krajów Europejskich  wg liczby ludności**
 ```{r}
 world %>% 
@@ -52,3 +52,27 @@ hist(areas$area_km2)
 ```{r}
 plot(x=world$lifeExp, y=world$gdpPercap)
 ```
+
+
+# Raster
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+new_raster
+# new_raster[] <- shows the matrix
+plot(new_raster)
+```
+
+## Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+```{r}
+max(new_raster[], na.rm = TRUE)
+```
+
+
+## Jaki jest rozkład wartości obrazu rastrowego?
+```{r}
+hist(new_raster, maxpixels=250000)
+```
+
+
+
