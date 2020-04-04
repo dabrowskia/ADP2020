@@ -41,11 +41,10 @@ nrow(world1)
 
 Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
 ```{r}
-worldSloverign <- world %>%
-filter(type == "Sovereign country")%>%
-mutate(area_km2_mutate = area_km2 / 10000)
-ggplot(worldSloverign, aes(x = area_km2_mutate)) +
-geom_histogram(bins=50)
+worldSlov<- world %>%
+filter(type == "Sovereign country")
+ggplot(worldSlov, aes(x = area_km2)) +
+geom_histogram()
 
 ```
 
