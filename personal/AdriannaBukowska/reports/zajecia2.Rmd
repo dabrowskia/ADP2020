@@ -9,11 +9,39 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(sf)
 library(raster)
+library(spData)
+library(dplyr)
 ```
 
 
 ## Zadanie 1
-Mapa krajów wg liczby ludności
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+```{r}
+world %>% 
+  select(pop)%>%
+  plot()
+
+```
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+```{r}
+world %>%
+  select(pop,name_long)%>%
+  arrange(pop) -> posortowane
+head(posortowane,1)
+```
+
+Ile krajów znajduje się w Azji?
+```{r}
+
+```
+
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+```{r}
+
+```
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
 ```{r}
 
 ```
