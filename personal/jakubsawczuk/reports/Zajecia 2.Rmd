@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
 ## Zadanie 1:
@@ -27,9 +27,7 @@ library(spData)
 library(dplyr)
 
 
-world[world$continent == "Europe",'pop'] %>% plot()
-world[world$continent == "Europe",c('name_long','pop')] -> populacja
-populacja
+world %>% dplyr::select(pop) %>% plot()
 
 ```
 
@@ -38,20 +36,34 @@ Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
   
 ```{r }
 
-world %>% select(name_long,pop) %>% arrange(pop) -> kraje
-kraje %>% nrow(1, )
-
+world %>% dplyr::select(name_long,pop) %>% arrange(pop) %>% head(1)
+  
 ```
 
 ## Zadanie 3:
 Ile krajów znajduje się w Azji?
 
+```{r }
+world %>% dplyr::select(name_long,region_un) %>% filter(region_un == "Asia") %>% nrow
+```
 
 
 ## Zadanie 4:
 Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
 
+```{r }
+world %>% select(area_km2,name_long,continent,type) %>% filter(type == "Sovereign country") -> ramka
+as_tibble(ramka)
+
+ggplot(ramka, aes(x = area_km2)) +
+  geom_histogram()
+```
+
 
 ## Zadanie 5:
 Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
 
+```{r }
+ggplot(world, aes(x = lifeExp,y = gdpPercap)) +
+  geom_point()
+```
