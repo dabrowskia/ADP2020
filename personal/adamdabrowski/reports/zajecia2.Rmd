@@ -1,0 +1,33 @@
+---
+title: "Zajęcia 2"
+author: "Adam Dąbrowski"
+date: "4/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+
+```
+
+
+## Zadanie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r}
+z <- 2
+x <-1
+```
+
+```{r}
+x+z
+```
+
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+Ile krajów znajduje się w Azji?
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
