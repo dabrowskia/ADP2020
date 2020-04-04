@@ -5,8 +5,6 @@ date: "4 04 2020"
 output: html_document
 ---
 
-```
-
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 library(sf)
@@ -22,24 +20,33 @@ library(fs)
 ## Zadanie 1
 Wyświetlcie mapę krajów Europejskich wg liczby ludności
 
-```{r nazwa}
+```{r}
 plot(world[world$continent == 'Europe','pop'])
 ```
 
 ## Zadanie 2
 Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
 
-
+```{r}
+world %>%
+  filter(pop == min(world$pop, na.rm=TRUE)) %>%
+  select(c(pop, name_long)) %>%
+  print()
+```
 
 ## Zadanie 3
 Ile krajów znajduje się w Azji?
 
-
+```{r}
+world %>%
+  filter(continent == 'Asia') %>%
+  summarise(n())
+```
 
 ## Zadanie 4
 Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country).
 
-```{r nazwa2}
+```{r}
 world %>%
   filter(type == 'Sovereign country') %>%
   ggplot(aes(x = pop)) +
@@ -48,3 +55,9 @@ world %>%
 
 ## Zadanie 5
 Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
+
+```{r}
+world %>%
+  ggplot(aes(x = lifeExp, y = gdpPercap)) +
+  geom_point()
+```
