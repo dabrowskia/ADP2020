@@ -1,0 +1,20 @@
+---
+title: "Zajecia2"
+author: "adriannabukowska"
+date: "4 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+```
+
+
+## Zadanie 1
+Mapa krajów wg liczby ludności
+```{r}
+
+```
+
