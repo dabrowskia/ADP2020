@@ -13,8 +13,10 @@ library(tidyverse)
 library(dplyr)
 library(ggplot2)
 library(spData)
+library(spDataLarge)
 library(devtools)
 library(fs)
+library(rgdal)
 ```
 
 ## Zadanie 1
@@ -50,7 +52,7 @@ Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign C
 world %>%
   filter(type == 'Sovereign country') %>%
   ggplot(aes(x = pop)) +
-  geom_histogram()
+  geom_histogram(bins = 30)
 ```
 
 ## Zadanie 5
@@ -61,3 +63,25 @@ world %>%
   ggplot(aes(x = lifeExp, y = gdpPercap)) +
   geom_point()
 ```
+
+
+## Zadanie 6
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+
+```{r}
+# Dane rastrowe
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+```
+
+```{r}
+max(new_raster[], na.rm = TRUE)
+```
+
+## Zadanie 7
+Jaki jest rozkład wartości obrazu rastrowego?
+
+```{r}
+hist(new_raster)
+```
+
