@@ -1,0 +1,24 @@
+---
+title: "Zajęcia2"
+author: "Krzysztof Wołowiec"
+date: "4 04 2020"
+output: html_document
+---
+
+## ZADANIE 1
+**CTRL+SHIFT+K** - to compile the file
+
+Wy
+```{r cars}
+install.packages('sf')
+install.packages("raster")
+```
+
+## Including Plots
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
