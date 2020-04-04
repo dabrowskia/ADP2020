@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 library(sf) 
 library(raster)
 library(spData)
@@ -35,6 +35,7 @@ min_world<-world%>%
   dplyr::select(name_long, pop)
 min_world
 ```
+
 ### Zadanie 3
 Ile krajów znajduje się w Azji?
 ```{r}
@@ -43,6 +44,7 @@ kraje_azji<-world%>%
 nrow(kraje_azji)
 
 ```
+
 ### Zadanie 4
 Wyświetlcie histogram powierzchni  wszystkich niezależnych 
 krajów (Sovereign Country)
@@ -52,10 +54,28 @@ world %>%
   ggplot(aes(x = area_km2)) +
   geom_histogram()
 ```
+
 ### Zadanie 5
 Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
 ```{r}
 ggplot(world, aes(x = lifeExp, y = gdpPercap)) +
   geom_point()
 ```
+
+### Zadanie 6
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+
+max_wys<-max(new_raster[ ], na.rm = TRUE)
+max_wys
+```
+
+### Zadanie 7
+Jaki jest rozkład wartości obrazu rastrowego?
+```{r}
+hist(new_raster[ ])
+```
+
 
