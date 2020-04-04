@@ -1,0 +1,28 @@
+---
+title: "Zajecia 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(dplyr)
+
+```
+
+## Zadanie 1
+
+Wyswietlcie mape krajow Europejskich wg liczby ludnosci
+
+```{r}
+world %>%
+  select(pop) %>%
+  plot()
+```
+Ktory kraj posiada 
+
+```{r}
+```
