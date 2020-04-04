@@ -1,0 +1,57 @@
+---
+title: "Zajecia 2"
+author: "Jakub Sawczuk"
+date: "4 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Zadanie 1:
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r }
+# install.packages("fs")
+# devtools::install_github("Nowosad/spDataLarge")
+
+library(sf)
+library(fs)
+library(tidyverse)
+library(ggplot2)
+library(raster)
+library(devtools)
+library(spData)
+library(dplyr)
+
+
+world[world$continent == "Europe",'pop'] %>% plot()
+world[world$continent == "Europe",c('name_long','pop')] -> populacja
+populacja
+
+```
+
+## Zadanie 2:
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+  
+```{r }
+
+world %>% select(name_long,pop) %>% arrange(pop) -> kraje
+kraje %>% nrow(1, )
+
+```
+
+## Zadanie 3:
+Ile krajów znajduje się w Azji?
+
+
+
+## Zadanie 4:
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+
+
+## Zadanie 5:
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+
