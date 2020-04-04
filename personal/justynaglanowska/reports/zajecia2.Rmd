@@ -10,19 +10,65 @@ library(raster)
 library(spData)
 library(spDataLarge)
 library(dplyr)
+library(ggplot2)
 
 ```
 
 ## Zadanie 1
 
-Wyswietlcie mape krajow Europejskich wg liczby ludnosci
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
 
 ```{r}
+world %>% 
+select(pop)%>%
+plot()
+```
+
+## Zadanie 2
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+
+```{r}
+
 world %>%
-  select(pop) %>%
-  plot()
+select(pop,name_long)%>%
+arrange(pop) -> posortowane
+head(posortowane,1)
 ```
-Ktory kraj posiada 
+
+
+## Zadanie 3
+
+Ile krajów znajduje się w Azji?
 
 ```{r}
+world1=subset(world,continent == 'Asia')
+nrow(world1)
 ```
+
+
+## Zadanie 4
+
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+
+```{r}
+worldSlov<- world %>%
+filter(type == "Sovereign country")
+
+ggplot(worldSlov, aes(x = area_km2)) +
+geom_histogram()
+```
+
+
+
+## Zadanie 5
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+```{r}
+
+ggplot(world, aes(x = lifeExp, y = gdpPercap)) +
+geom_point()
+```
+
+
