@@ -1,0 +1,33 @@
+---
+title: "Punkt w Polsce"
+author: "Jakub Sawczuk"
+date: "25 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+```{r}
+library(spData)
+library(sf)
+library(dplyr)
+library(ggplot2)
+
+lnd_point = st_point(c(18, 53))                 # sfg object
+lnd_geom = st_sfc(lnd_point, crs = 4326)           # sfc object
+lnd_attrib = data.frame(                           # data.frame object 
+  name = "Toruń", 
+  temperature = 8,
+  date = as.Date("2020-04-25"))
+lnd_sf = st_sf(lnd_attrib, geometry = lnd_geom)    # sf object
+lnd_sf
+
+ggplot() + 
+  geom_sf(data = world) +
+  geom_sf(data = lnd_sf)
+```
+
