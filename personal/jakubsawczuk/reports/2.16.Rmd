@@ -1,0 +1,35 @@
+---
+title: '2.16'
+author: "Jakub Sawczuk"
+date: "14 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+## Najwyższa wartość:
+
+
+```{r echo = FALSE}
+library(raster)
+library(rgdal)
+
+
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+maxim <- max(new_raster[ ])
+maxim
+```
+
+## Histogram wyokości:
+
+
+```{r pressure, echo=FALSE}
+library(raster)
+library(rgdal)
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+hist(new_raster)
+```
