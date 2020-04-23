@@ -23,3 +23,19 @@ Wyświetlcie mapę krajów Europejskich  wg liczby ludności
 plot(world[world$continent == "Europe", "pop"])
 ```
 
+## Zadanie 2
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r}
+world %>% select(name_long,pop) %>% arrange(pop)%>% slice(0:1)
+```
+
+## Zadanie 3
+
+```{r}
+world %>% filter(continent == 'Asia') %>% count()
+```
+
+
+
