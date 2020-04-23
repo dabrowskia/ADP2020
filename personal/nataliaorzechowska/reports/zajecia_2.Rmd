@@ -36,6 +36,20 @@ world %>% select(name_long,pop) %>% arrange(pop)%>% slice(0:1)
 ```{r}
 world %>% filter(continent == 'Asia') %>% count()
 ```
+## Zadanie 4
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
 
+```{r}
+world %>% filter( type == "Sovereign country") %>% select(name_long, area_km2) %>% 
+  ggplot(mapping = aes(x = name_long, y = area_km2))+geom_bar(stat = "identity", fill = "lightblue") + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
+```
+## Zadanie 5
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+
+```{r}
+world %>% select(lifeExp, gdpPercap ) %>% ggplot(mapping = aes(x = lifeExp, y = gdpPercap)) + geom_point()
+```
 
