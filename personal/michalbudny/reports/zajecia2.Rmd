@@ -58,5 +58,15 @@ ggplot(world, aes(x = lifeExp, y = gdpPercap)) + geom_point()
 ## Zadanie 1
 
 ```{r}
-#max(new_master[],na.rm = NA)
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+max(values(new_raster))
+```
+
+## Zadanie 2
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+hist(new_raster, maxpixels=212505, main = "Rozkład wartości obrazu")
 ```
