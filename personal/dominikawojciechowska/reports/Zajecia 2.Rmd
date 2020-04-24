@@ -6,22 +6,30 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
 ```
+
+```{r}
+
+library("sf")
+library("raster")
+library("spData")
+library("spDataLarge")
+library ("dplyr")
+library ("ggplot2")
+
+```
+
 
 ## Zadanie 1
 
 Wyświetlcie mapę krajów Europejskich  wg liczby ludności
 
 ```{r}
-library("sf")
-library("raster")
-library("spData")
-library("spDataLarge")
-library ("dplyr")
 
-plot(world[world$continent=="Europe","pop"])
-summary(world["pop"])
+
+# plot(world[world$continent=="Europe","pop"])
+# summary(world["pop"])
 
 # 2 rozwiązanie
 
@@ -29,7 +37,6 @@ world %>%
   filter(continent == "Europe") %>%
   select(pop) %>%
   plot()
-
 
 ```
 
@@ -39,16 +46,21 @@ Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
 
 ```{r}
 
-world[world$pop==min(world$pop, na.rm=TRUE),c("name_long", "pop")]
+# world[world$pop==min(world$pop, na.rm=TRUE),c("name_long", "pop")]
+# 
+# # 2 rozwiązanie
+# 
+# world %>% 
+#   filter(pop == min(world$pop, na.rm=TRUE)) %>%
+#   select(name_long, pop)
 
-# 2 rozwiązanie
+# 3 rozwiązanie
 
-world %>% 
-  filter(pop == min(world$pop, na.rm=TRUE)) %>%
-  select(name_long, pop)
+sorted_world <- world %>%
+select(pop,name_long)%>%
+arrange(pop) 
+head(sorted_world,1)
 
-
- 
 
 ```
 
@@ -58,13 +70,56 @@ Ile krajów znajduje się w Azji?
 
 ```{r}
 
-
+asia <- world %>%
+  filter(continent == "Asia")
   
-
+nrow(asia)
 
 ```
 
+## Zadanie 4
 
-Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
-Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country).
+
+```{r}
+sovereign_country <- world %>%
+  filter(type == "Sovereign country")
+
+ggplot(sovereign_country, aes(x = area_km2)) +
+  geom_histogram()
+  
+```
+
+## Zadanie 5
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
+
+```{r}
+ggplot(world) +
+  geom_point(aes(x=lifeExp, y = gdpPercap))
+
+```
+
+## Zadanie 6
+
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+
+max(new_raster[],na.rm = NA)
+```
+
+
+## Zadanie 7 
+
+Jaki jest rozkład wartości obrazu rastrowego?
+
+
+```{r}
+
+hist(new_raster)
+
+```
 
