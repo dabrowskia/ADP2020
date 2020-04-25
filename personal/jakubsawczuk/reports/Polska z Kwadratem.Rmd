@@ -54,4 +54,12 @@ ggplot() +
   geom_sf(data = line)
 ```
 
+```{r}
+filter(world,name_long == "Poland") -> Polska
+Polska
+
+st_cast(Polska, "MULTILINESTRING") -> PolskaGranica
+st_length(PolskaGranica)
+```
+
 
