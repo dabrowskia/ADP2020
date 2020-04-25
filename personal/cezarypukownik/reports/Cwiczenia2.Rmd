@@ -1,75 +1,83 @@
 ---
-title: "Zadanie 1"
+title: "Cwiczenia 2"
 output: html_document
+author: 'Cezary Pukownik'
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-
-```
-  
-
-```{r}
-library(ggplot2)
-library(tidyverse)
+library(knitr)
 library(sf)
+library(raster)
 library(spData)
-
+library(dplyr)
+library(ggplot2)
 ```
 
-```{r point}
-#53°01′20″N 18°36′40″E
-
-lnd_point = st_point(c(18.36, 53.01))                 # sfg object
-lnd_geom = st_sfc(lnd_point, crs = 4326)           # sfc object
-lnd_attrib = data.frame(                           # data.frame object
-  name = "Toruń"
-  )
-lnd_sf = st_sf(lnd_attrib, geometry = lnd_geom)    # sf object
-lnd_sf
-
-```
+# 1. Wyświetlcie mapę krajów Europejskich wg liczby ludności.
 
 ```{r}
-punkt <- st_point(c(17, 52)) %>% st_sfc(crs = st_crs(world)) %>% st_sf()
-ggplot()+
-  geom_sf(data = world)+
-  geom_sf(data = punkt, size = 4, col = 'dark green')+
-  theme_light()
+world %>%
+  filter(continent == "Europe") %>%
+  select(pop) %>%
+  ggplot(aes(fill=pop)) +
+    geom_sf() +
+    labs(title='Populacja w krajach europejskich') +
+    theme_classic() 
 ```
 
+
+
+# 2. Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+
+Najmniejszą liczbę ludności ma Grenlandia.
 
 ```{r}
-linestring_matrix = rbind(c(1, 5), c(4, 4), c(4, 1), c(2, 2), c(3, 2))
-line <- st_linestring(linestring_matrix)
-plot(line)
+world %>%
+  arrange(pop) %>%
+  select(name_long,pop) %>%
+  top_n(1, wt=-pop) %>% 
+  st_set_geometry(NULL) %>% 
+  kable()
 ```
+
+# 3. Ile krajów znajduje się w Azji?
+W Azji znajduje się 47 krajów.
 
 ```{r}
-world %>% 
-  filter(name_long=='Poland')
+world %>%
+  group_by(continent) %>% 
+  summarise(count=n()) %>% 
+  filter(continent == "Asia") %>% 
+  st_set_geometry(NULL) %>% 
+  kable()
 ```
+
+
+# 4. Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country).
+
 ```{r}
-populated_places <- st_read('/home/altarin/ADP2020/personal/cezarypukownik/data/ne_110m_populated_places/ne_110m_populated_places.shp')
-
+world %>%
+  filter(type == "Sovereign country") %>%
+  ggplot(aes(area_km2)) +
+    geom_histogram(bins = 20) +
+    scale_x_log10() +
+    labs(title='Powierzchnia krajów niezaleznych',
+         x='Powierzchnia w km2',
+         y='Liczba krajów') +
+    theme_classic()
 ```
 
-# Dane GUS
+# 5. Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
 
 ```{r}
-powiaty <- st_read('/home/altarin/ADP2020/personal/cezarypukownik/data/jednostki_administracyjne/PRG_jednostki_administracyjne_v39_SZPRG/Powiaty.shp')
-
-#join po JPT_KOD_JE
-malzenstwa = readxl::read_excel('/home/altarin/ADP2020/personal/cezarypukownik/data/LUDN_2999_XTAB_20200425101555.xlsx', sheet = 'TABLICA')
-
-
-malzenstwa
+world %>%
+  ggplot(aes(x = lifeExp, y = gdpPercap, color=continent)) +
+  geom_point() +
+  scale_y_log10() +
+  labs(title='Im większe PKB per capita, tym większa długość życia',
+       y='Długość zycia',
+       x='PKB per capita') +
+  theme_classic()
 ```
-```{r}
-powiaty$JPT_KOD_JE <-  paste0(powiaty$JPT_KOD_JE, '000') # dodaj 0000 na końcy aby połączyć
-powiaty %>% 
-  left_join(malzenstwa, by=c('JPT_KOD_JE'='Kod')) %>% 
-  select(rok) %>% 
-  plot()
-```
-
