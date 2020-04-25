@@ -1,0 +1,89 @@
+---
+title: "Zajecia2"
+author: "Dariusz Ratajczak"
+date: "4 04 2020"
+output: html_document
+---
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+
+```
+
+```{r}
+
+library(sf)
+library(fs)
+library(tidyverse)
+library(ggplot2)
+library(raster)
+library(devtools)
+library(spData)
+library(dplyr)
+```
+
+## ZADANIA
+
+## 1. Wyswietlić mapę krajów Europejskich  wg liczby ludności.
+
+```{r}
+world %>% 
+  filter(continent == "Europe") %>% 
+  ggplot() +
+  geom_sf(aes(fill = pop))
+```
+
+## 2. Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r}
+world %>% 
+  filter(!is.na(pop)) %>%
+  filter(pop == min(pop)) %>% 
+  dplyr::select(name_long) %>% 
+  st_set_geometry(NULL)
+```
+
+## 3. Ile krajWw znajduje się w Azji?
+
+```{r}
+world %>% 
+  filter(continent == "Asia") %>% 
+  nrow()
+```
+
+## 4. Wyswietlić histogram powierzchni wszystkich niezależnych krajów (Sovereign country).
+
+```{r}
+world %>% 
+  filter(type == 'Sovereign country') %>% 
+  ggplot(aes(x = area_km2)) + 
+  geom_histogram(bins = 30)
+```
+
+## 5. Wyswietlić wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
+
+```{r}
+
+world %>% 
+  filter(!is.na(lifeExp), !is.na(gdpPercap)) %>% 
+  ggplot() +
+  geom_point(aes(x = lifeExp, y = gdpPercap))
+```
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+```
+
+## 6. Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+
+```{r}
+max(new_raster[])
+```
+
+## 7. Jaki jest rozkład wartości obrazu rastrowego?
+
+```{r}
+hist(new_raster[])
+```
