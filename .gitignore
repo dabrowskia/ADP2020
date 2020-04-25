@@ -1,3 +1,6 @@
+# Ignoruj dane 
+personal/cezarypukownik/data/
+
 # History files
 .Rhistory
 .Rapp.history
