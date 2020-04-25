@@ -1,0 +1,74 @@
+---
+title: "Zajecia2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Zadanie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+
+
+```{r cars}
+library(sf)
+library(raster)
+library(spData)
+library(dplyr)
+library(spDataLarge)
+EU<- world[world$continent=="Europe","pop"]
+plot(EU)
+```
+
+# Zadanie 2
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r pressure, echo=FALSE}
+min<-min(world$pop, na.rm=TRUE)
+popul<-world%>%filter(pop==min)%>%select(name_long,pop)
+popul
+
+```
+
+
+
+# zadanie 3
+
+Ile krajów znajduje się w Azji?
+```{r}
+Azja<-world[world$continent=="Asia",]
+nrow(Azja)
+```
+
+# Zadanie 4
+
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+```{r}
+worldHist<-world[world$type=="Sovereign country",]
+hist(worldHist$area_km2)
+```
+
+# Zadanie 5
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+```{r}
+plot(world$lifeExp,world$gdpPercap)
+```
+
+# Zadanie 6
+## Następny slajd
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+
+raster_filepath<-system.file("raster/srtm.tif", package="spDataLarge")
+new_raster<-raster(raster_filepath)
+max(new_raster(),na.rm=NA)
+
+# Zadanie 7
+Jaki jest rozkład wartości obrazu rastrowego?
+Histogram
+
+
