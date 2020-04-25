@@ -1,7 +1,7 @@
-library("sf")
-library("raster")
-library("spData")
-library("spDataLarge")
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
 library(dplyr)
 library(ggplot2)
 

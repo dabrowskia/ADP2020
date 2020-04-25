@@ -4,10 +4,10 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-library("sf")
-library("raster")
-library("spData")
-library("spDataLarge")
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
 library(dplyr)
 library(ggplot2)
 ```
