@@ -1,0 +1,75 @@
+---
+title: "Zadanie 1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+  
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(sf)
+library(spData)
+
+```
+
+```{r point}
+#53°01′20″N 18°36′40″E
+
+lnd_point = st_point(c(18.36, 53.01))                 # sfg object
+lnd_geom = st_sfc(lnd_point, crs = 4326)           # sfc object
+lnd_attrib = data.frame(                           # data.frame object
+  name = "Toruń"
+  )
+lnd_sf = st_sf(lnd_attrib, geometry = lnd_geom)    # sf object
+lnd_sf
+
+```
+
+```{r}
+punkt <- st_point(c(17, 52)) %>% st_sfc(crs = st_crs(world)) %>% st_sf()
+ggplot()+
+  geom_sf(data = world)+
+  geom_sf(data = punkt, size = 4, col = 'dark green')+
+  theme_light()
+```
+
+
+```{r}
+linestring_matrix = rbind(c(1, 5), c(4, 4), c(4, 1), c(2, 2), c(3, 2))
+line <- st_linestring(linestring_matrix)
+plot(line)
+```
+
+```{r}
+world %>% 
+  filter(name_long=='Poland')
+```
+```{r}
+populated_places <- st_read('/home/altarin/ADP2020/personal/cezarypukownik/data/ne_110m_populated_places/ne_110m_populated_places.shp')
+
+```
+
+# Dane GUS
+
+```{r}
+powiaty <- st_read('/home/altarin/ADP2020/personal/cezarypukownik/data/jednostki_administracyjne/PRG_jednostki_administracyjne_v39_SZPRG/Powiaty.shp')
+
+#join po JPT_KOD_JE
+malzenstwa = readxl::read_excel('/home/altarin/ADP2020/personal/cezarypukownik/data/LUDN_2999_XTAB_20200425101555.xlsx', sheet = 'TABLICA')
+
+
+malzenstwa
+```
+```{r}
+powiaty$JPT_KOD_JE <-  paste0(powiaty$JPT_KOD_JE, '000') # dodaj 0000 na końcy aby połączyć
+powiaty %>% 
+  left_join(malzenstwa, by=c('JPT_KOD_JE'='Kod')) %>% 
+  select(rok) %>% 
+  plot()
+```
+
