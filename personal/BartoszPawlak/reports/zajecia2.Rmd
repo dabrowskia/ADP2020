@@ -1,0 +1,81 @@
+---
+title: "Zajęcia 2"
+author: "Bartosz Pawlak"
+date: "4 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(dplyr)
+library(ggplot2)
+```
+
+# Praca domowa 1
+
+## Zadanie 1
+
+```{r}
+plot(world[world$continent=="Europe","pop"])
+```
+
+## Zadanie 2
+
+```{r}
+world %>%
+select(pop,name_long)%>%
+arrange(pop) -> posortowane
+head(posortowane,1)
+```
+
+## Zadanie 3
+```{r}
+world1=subset(world,continent == 'Asia')
+nrow(world1)
+```
+
+## Zadanie 4
+```{r}
+worldSlov<- world %>%
+filter(type == "Sovereign country")
+ggplot(worldSlov, aes(x = area_km2)) + geom_histogram()
+```
+
+## Zadanie 5
+```{r}
+ggplot(world, aes(x = lifeExp, y = gdpPercap)) + geom_point()
+```
+
+# Praca domowa 2
+
+## Zadanie 1
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+max(values(new_raster))
+```
+
+## Zadanie 2
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+hist(new_raster, maxpixels=212505, main = "Rozkład wartości obrazu")
+```
+
+# Zajecia 2, zadanie 1
+## Zadanie 1
+```{r}
+punkt <- st_point(c(19, 53)) %>% st_sfc(crs = 
+st_crs(world)) %>% st_sf()
+ggplot() +
+  geom_sf(data = world) + 
+  geom_sf(data = punkt, size = 1, col = 'red') + 
+  theme_light()
+```
+
