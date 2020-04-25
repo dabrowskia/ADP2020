@@ -37,7 +37,7 @@ kwadrat <- st_polygon(polygon_list) %>%
 ```
 
 ```{r}
-linestring_matrix = rbind(c(13,52),c(14.49))
+linestring_matrix = rbind(c(13.9,55),c(24.2,48.9))
 line <- st_linestring(linestring_matrix) %>%
   
 st_sfc(crs = 4326) %>%
