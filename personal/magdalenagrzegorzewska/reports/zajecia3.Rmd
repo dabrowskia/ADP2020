@@ -61,7 +61,6 @@ line <- st_linestring(Linestring_matrix) %>%
 filter(world,name_long == "Poland") -> Polska
 
 ggplot()+
-  #geom_sf(data = punkt, fill = NA) +
   geom_sf(data = obszar) +
   geom_sf(data = Polska) +
   geom_sf(data = line) +
