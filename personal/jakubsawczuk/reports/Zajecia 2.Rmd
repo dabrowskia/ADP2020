@@ -52,7 +52,7 @@ world %>% dplyr::select(name_long,region_un) %>% filter(region_un == "Asia") %>%
 Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
 
 ```{r }
-world %>% select(area_km2,name_long,continent,type) %>% filter(type == "Sovereign country") -> ramka
+world %>% dplyr::select(area_km2,name_long,continent,type) %>% filter(type == "Sovereign country") -> ramka
 as_tibble(ramka)
 
 ggplot(ramka, aes(x = area_km2)) +

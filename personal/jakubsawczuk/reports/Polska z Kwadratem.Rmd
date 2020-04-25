@@ -14,7 +14,9 @@ library(spData)
 library(sf)
 library(dplyr)
 library(ggplot2)
+```
 
+```{r}
 lnd_point = st_point(c(18, 53))                 # sfg object
 lnd_geom = st_sfc(lnd_point, crs = 4326)           # sfc object
 lnd_attrib = data.frame(                           # data.frame object 
@@ -23,21 +25,33 @@ lnd_attrib = data.frame(                           # data.frame object
   date = as.Date("2020-04-25"))
 lnd_sf = st_sf(lnd_attrib, geometry = lnd_geom)    # sf object
 lnd_sf
+```
 
+```{r}
+polygon_list = list(rbind(c(13.9,55),c(24.2,55),c(24.2,48.9),c(14,48.9),c(13.9,55)))
+kwadrat <- st_polygon(polygon_list) %>%
 
-polygon_list = list(rbind(c(2,100),c(50,100),c(70,300),c(20,70),c(2,100)))
-kwadrat <- st_polygon(polygon_list)
+  st_sfc(crs = 4326) %>%
+  st_sf()
 
-linestring_matrix = rbind(c(18,70))
-line <- st_linestring(linestring_matrix)
+```
+
+```{r}
+linestring_matrix = rbind(c(13,52),c(14.49))
+line <- st_linestring(linestring_matrix) %>%
+  
+st_sfc(crs = 4326) %>%
+st_sf()
+```
+
+```{r}
+filter(world,name_long == "Poland") -> Polska
 
 ggplot() + 
-  #geom_sf(data = world) +
-  geom_sf(data = lnd_sf) +
+  geom_sf(data = lnd_sf,fill= NA) +
   geom_sf(data = kwadrat)+
+  geom_sf(data = Polska) +
   geom_sf(data = line)
-
-
 ```
 
 
