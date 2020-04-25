@@ -1,0 +1,81 @@
+---
+title: "raportzajecia2"
+author: "alicjalisiecka"
+date: "5 kwietnia 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+library(spData)
+library(dplyr)
+library(ggplot2)
+library(spDataLarge)
+```
+
+## Zadanie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r}
+plot(world[world$continent == "Europe", "pop"])
+
+```
+
+## Zadanie 2
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+```{r}
+minimalna <- min(world$pop, na.rm = TRUE)
+world[world$pop == minimalna, c("name_long", "pop")]
+
+```
+
+## Zadanie 3
+Ile krajów znajduje się w Azji?
+```{r}
+selected_county <- world %>%
+  filter(continent == "Asia") %>%
+  count()
+
+```
+
+
+
+## Zadanie 4
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+
+```{r}
+selected_sove <- world %>%
+  filter(type == "Sovereign country")
+ggplot(selected_sove, aes(x =  area_km2 ))+
+  geom_histogram()
+
+```
+
+
+
+## Zadanie 5
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+
+```{r}
+ggplot(world, aes(x = lifeExp, y = gdpPercap)) +
+  geom_point()
+
+```
+
+
+## Zadanie 6
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+
+```{r}
+raster_filepath <- system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster <- raster(raster_filepath)
+new_raster
+new_raster[ ]
+plot(new_raster)
+max(new_raster[ ], na.rm = NA)
+
+```
+
