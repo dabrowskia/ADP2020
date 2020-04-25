@@ -1,0 +1,83 @@
+---
+title: "Cwiczenia 2"
+output: html_document
+author: 'Cezary Pukownik'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(sf)
+library(raster)
+library(spData)
+library(dplyr)
+library(ggplot2)
+```
+
+# 1. Wyświetlcie mapę krajów Europejskich wg liczby ludności.
+
+```{r}
+world %>%
+  filter(continent == "Europe") %>%
+  select(pop) %>%
+  ggplot(aes(fill=pop)) +
+    geom_sf() +
+    labs(title='Populacja w krajach europejskich') +
+    theme_classic() 
+```
+
+
+
+# 2. Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+
+Najmniejszą liczbę ludności ma Grenlandia.
+
+```{r}
+world %>%
+  arrange(pop) %>%
+  select(name_long,pop) %>%
+  top_n(1, wt=-pop) %>% 
+  st_set_geometry(NULL) %>% 
+  kable()
+```
+
+# 3. Ile krajów znajduje się w Azji?
+W Azji znajduje się 47 krajów.
+
+```{r}
+world %>%
+  group_by(continent) %>% 
+  summarise(count=n()) %>% 
+  filter(continent == "Asia") %>% 
+  st_set_geometry(NULL) %>% 
+  kable()
+```
+
+
+# 4. Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country).
+
+```{r}
+world %>%
+  filter(type == "Sovereign country") %>%
+  ggplot(aes(area_km2)) +
+    geom_histogram(bins = 20) +
+    scale_x_log10() +
+    labs(title='Powierzchnia krajów niezaleznych',
+         x='Powierzchnia w km2',
+         y='Liczba krajów') +
+    theme_classic()
+```
+
+# 5. Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
+
+```{r}
+world %>%
+  ggplot(aes(x = lifeExp, y = gdpPercap, color=continent)) +
+  geom_point() +
+  scale_y_log10() +
+  labs(title='Im większe PKB per capita, tym większa długość życia',
+       y='Długość zycia',
+       x='PKB per capita') +
+  theme_classic()
+```
