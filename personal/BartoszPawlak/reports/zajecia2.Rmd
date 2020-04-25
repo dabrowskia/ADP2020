@@ -71,11 +71,11 @@ hist(new_raster, maxpixels=212505, main = "Rozkład wartości obrazu")
 # Zajecia 2, zadanie 1
 ## Zadanie 1
 ```{r}
-punkt <- st_point(c(18, 50)) %>% st_sfc(crs = 
+punkt <- st_point(c(19, 53)) %>% st_sfc(crs = 
 st_crs(world)) %>% st_sf()
 ggplot() +
   geom_sf(data = world) + 
-  geom_sf(data = punkt, size = 4, col = 'red') + 
+  geom_sf(data = punkt, size = 1, col = 'red') + 
   theme_light()
 ```
 
