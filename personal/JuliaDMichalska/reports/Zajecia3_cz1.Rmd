@@ -10,7 +10,7 @@ library(ggplot2)
 library(tidyverse)
 library(dplyr)
 ```
-
+ 
 ## Punkt
 
 ```{r dane, include=FALSE}
