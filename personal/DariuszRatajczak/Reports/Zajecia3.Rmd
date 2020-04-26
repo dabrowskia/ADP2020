@@ -1,9 +1,10 @@
 ---
-title: "Zajęcia3"
+title: "Zajecia3"
 author: "Dariusz Ratajczak"
 date: "25 04 2020"
 output: html_document
 ---
+
 ```{r setup, include = FALSE}
 library(sf)
 library(fs)
@@ -14,7 +15,6 @@ library(devtools)
 library(spData)
 library(dplyr)
 library(lwgeom)
-#install.packages(("lwgeom"))
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
@@ -25,7 +25,9 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```{r}
 XY_punkt = st_point(c(16.9252, 52.4064)) # Poznań
 XY_geom = st_sfc(XY_punkt, crs = st_crs(world))
-XY_attrib = data.frame(name = "Poznań")
+XY_attrib = data.frame(name = "Poznań",
+                       temperature = 21,
+                       date = as.Date("2020-04-25"))
 XY_sf = st_sf(XY_attrib, XY_geom)
 ggplot() +
   geom_sf(data = world) +
