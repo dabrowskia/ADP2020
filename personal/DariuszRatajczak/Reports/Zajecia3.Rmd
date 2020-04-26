@@ -1,7 +1,7 @@
 ---
 title: "Zajecia3"
 author: "Dariusz Ratajczak"
-date: "25 04 2020"
+date: "26 04 2020"
 output: html_document
 ---
 
