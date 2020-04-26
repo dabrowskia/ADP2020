@@ -1,0 +1,85 @@
+---
+title: "Zajęcia3"
+author: "Dariusz Ratajczak"
+date: "25 04 2020"
+output: html_document
+---
+```{r setup, include = FALSE}
+library(sf)
+library(fs)
+library(tidyverse)
+library(ggplot2)
+library(raster)
+library(devtools)
+library(spData)
+library(dplyr)
+library(lwgeom)
+#install.packages(("lwgeom"))
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+## ZADANIA
+
+## 1. Utwórz punkt, który będzie znajdował się gdzieś na terenie Polski i wyświetl go na mapie świata.
+
+```{r}
+XY_punkt = st_point(c(16.9252, 52.4064)) # Poznań
+XY_geom = st_sfc(XY_punkt, crs = st_crs(world))
+XY_attrib = data.frame(name = "Poznań")
+XY_sf = st_sf(XY_attrib, XY_geom)
+ggplot() +
+  geom_sf(data = world) +
+  geom_sf(data = XY_sf, size = 1, col = 'red')
+```
+
+## 2. Stwórz obiekt będący poligonem (kwadratem) otaczającym Polskę.
+
+```{r}
+PL <- world %>% 
+  filter(name_long == "Poland")
+kwadrat <- st_polygon(list(rbind(c(14, 48.95), c(14, 54.9), c(24.1, 54.9), c(24.1, 48.95), c(14, 48.95))))
+kwadrat_sf = st_sfc(kwadrat, crs = st_crs(world))
+ggplot() +
+  geom_sf(data = kwadrat_sf, color = 'red') +
+  geom_sf(data = PL)
+```
+
+## 3. Stwórz linię przecinającą Polskę na część wschodnią i zachodnią (mniej więcej przebiegającą przez rzekę Wisłę). Niech linia ta składa się z 5 punktów.
+
+```{r}
+PL <- world %>% 
+  filter(name_long == "Poland")
+wisla <- st_linestring(rbind(c(18.7, 49.6), c(21.2, 50.5), c(21.3, 51.7), c(17.4, 53), c(18.7, 54.6)))
+wisla_sf = st_sfc(wisla, crs = st_crs(world))
+ggplot() +
+  geom_sf(data = PL) +
+  geom_sf(data = wisla_sf, size = 1, color = 'blue')
+```
+
+## 4. Wyświetl na mapie kontur Polski ze zbioru world, oraz utworzone obie warstwy.
+
+```{r}
+PL <- world %>% 
+  filter(name_long == "Poland")
+ggplot() +
+  geom_sf(data = kwadrat_sf, color = 'red' ) +
+  geom_sf(data = PL) +
+  geom_sf(data = wisla_sf, size = 1, color = 'blue')
+```
+
+## 5. Jaką powierzchnię ma Polska.
+
+```{r}
+world %>% 
+  filter(name_long == "Poland") %>% 
+  st_area(geom)
+```
+
+## 6. Jaką długość ma granica Polski?
+
+```{r}
+world %>% 
+  filter(name_long == "Poland") %>% 
+  st_cast() %>% 
+  st_length()
+```
