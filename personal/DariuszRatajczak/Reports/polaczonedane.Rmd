@@ -1,0 +1,33 @@
+---
+title: "PolaczoneDane"
+author: "Dariusz Ratajczak"
+date: "26 04 2020"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(readxl)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r}
+powiaty <- st_read(dsn = 'J:/ADP2020/personal/DariuszRatajczak/data/Powiaty.shp')
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+powiaty <- powiaty %>% 
+  dplyr::select(JPT_KOD_JE, geometry)
+
+wynagrodzenie <- read_xlsx('J:/ADP2020/personal/DariuszRatajczak/data/Wynagrodzenie.xlsx',
+                           sheet = 2)
+dane <- powiaty %>%
+  left_join(wynagrodzenie, by = c('JPT_KOD_JE' = 'Kod'))
+
+```
+
+```{r}
+ggplot(dane, aes(fill = Wynagrodzenie)) +
+  geom_sf() +
+  labs(title = 'Wysokość średniego wynagrodzenia w 2018 roku w podziale na powiaty') 
+```
