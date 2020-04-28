@@ -1,0 +1,184 @@
+---
+title: "Cwiczenia 3"
+output: html_document
+author: 'Cezary Pukownik'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(sf)
+library(spData)
+library(knitr)
+
+```
+
+
+```{r, include=FALSE}
+#53°01′20″N 18°36′40″E
+
+lnd_point = st_point(c(18.36, 53.01))                 # sfg object
+lnd_geom = st_sfc(lnd_point, crs = 4326)           # sfc object
+lnd_attrib = data.frame(                           # data.frame object
+  name = "Toruń"
+  )
+lnd_sf = st_sf(lnd_attrib, geometry = lnd_geom)    # sf object
+lnd_sf
+
+```
+
+```{r, include=FALSE}
+punkt <- st_point(c(17, 52)) %>% st_sfc(crs = st_crs(world)) %>% st_sf()
+ggplot() +
+  geom_sf(data = world)+
+  geom_sf(data = punkt, size = 4, col = 'dark green')+
+  theme_light()
+```
+
+
+```{r, include=FALSE}
+linestring_matrix = rbind(c(1, 5), c(4, 4), c(4, 1), c(2, 2), c(3, 2))
+line <- st_linestring(linestring_matrix)
+plot(line)
+```
+
+# Zadania o Polsce
+
+```{r}
+polska <- world %>% 
+  filter(name_long=='Poland')
+```
+1.Stwórzcie obiekt będący poligonem (kwadratem) otaczającym Polskę,
+
+```{r}
+
+kwadrat_poly <- st_polygon(list(rbind(c(14,55),c(24,55),c(24,49),c(14,49),c(14,55))))
+kwadrat <- st_sfc(kwadrat_poly, crs = st_crs(world))
+```
+
+
+2. Stwórzcie linię przecinającą Polskę na część wschodnią i zachodnią (mniej więcej przebiegającą przez rzekę Wisłę). Niech linia ta składa się z 10 punktów.
+```{r}
+
+wisla_line <- st_linestring(rbind(c(18.946808, 54.354193),
+                    c(18.735939, 53.477512),
+                    c(18.111901, 53.117029),
+                    c(20.625013, 52.421425),
+                    c(21.790289, 51.553142),
+                    c(21.688874, 50.659114),
+                    c(19.944729, 50.050815),
+                    c(19.241540, 50.057391),
+                    c(18.779162, 49.778298),
+                    c(18.906641, 49.614388)))
+
+
+
+wisla <-  st_sfc(wisla_line, crs = st_crs(world))
+
+```
+
+3. Wyświetlcie na mapie kontur Polski ze zbioru world, oraz utworzone obie warstwy.
+```{r}
+polska %>% 
+  ggplot() +
+  geom_sf(data=kwadrat) +
+  geom_sf() + 
+  geom_sf(data=wisla) +
+  labs(title='Polska w kwadracie z linią w kształcie wisły')
+```
+
+4. Jaką powierzchnię ma Polska?
+
+Polska ma powierzchnię 310,4 tys km2
+```{r}
+polska %>% 
+  select(name_long, area_km2) %>% 
+  st_set_geometry(NULL) %>% 
+  kable()
+```
+
+5. Jaką długość ma granica Polski?
+
+Granica Polski ma dlugośc 2 384 913 m
+```{r}
+
+polska_polygon <- polska$geom
+polska_polygon
+
+# S3 method for LINESTRING
+polska_polygon %>% 
+  st_cast('MULTILINESTRING') %>% 
+  st_length() -> polska['border_length']
+
+polska %>%
+  select(name_long, border_length) %>% 
+  st_set_geometry(NULL) %>%
+  kable()
+
+```
+
+
+# Wczytywanie danych 
+```{r}
+populated_places <- st_read('../data/ne_110m_populated_places/ne_110m_populated_places.shp')
+
+#head(populated_places)
+```
+
+# Dane GUS
+
+Feminizacja - liczba kobiet na 100 męszczyzn.
+```{r}
+powiaty <- st_read('../data/jednostki_administracyjne/PRG_jednostki_administracyjne_v39_SZPRG/Powiaty.shp')
+
+#join po JPT_KOD_JE
+
+feminizacja = readxl::read_excel('../data/Feminizacja_Gminy.xlsx', sheet = 'TABLICA')
+
+feminizacja %>% 
+  head() %>% 
+  kable()
+```
+
+Połączenie danych
+```{r}
+powiaty['JPT_KOD_JE'] <-  paste0(powiaty$JPT_KOD_JE, '000') # dodaj 000 na końcy aby połączyć
+
+feminizacja_geom <- powiaty %>%
+  left_join(feminizacja, by=c('JPT_KOD_JE'='Kod')) %>% 
+  select(JPT_KOD_JE, JPT_NAZWA_, feminizacja=ogółem) %>% 
+  mutate_at('feminizacja', as.numeric)
+
+feminizacja_geom %>% 
+  head() 
+```
+
+
+```{r}
+feminizacja_geom %>% 
+  ggplot(aes(fill=feminizacja, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Liczba kobiet przypadających na 100 mężczyzn z Polsce') +
+  theme_void()
+  
+  
+```
+```{r}
+#TOP 10 NAJWIĘCEJ
+feminizacja_geom %>% 
+  st_set_geometry(NULL) %>%
+  arrange(-feminizacja) %>% 
+  head(10) %>% 
+  kable()
+```
+
+```{r}
+#TOP 10 NAJMNIEJ
+feminizacja_geom %>% 
+  st_set_geometry(NULL) %>%
+  arrange(feminizacja) %>% 
+  head(10) %>% 
+  kable()
+```
+
