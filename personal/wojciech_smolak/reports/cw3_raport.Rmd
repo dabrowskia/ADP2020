@@ -1,0 +1,115 @@
+---
+title: "cw3_raport"
+author: "Wojciech Smolak"
+date: "4/25/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(dplyr)
+library(ggplot2)
+```
+
+## Zajęcia3::ćwiczenia::1
+
+Zbiór danych world posiada współrzędne geograficzne w stopniach i dziesiętnych częściach stopni. Utwórzcie punkt, który będzie znajdował się gdzieś na terenie Polski i wyświetlcie go na mapie świata.
+
+```{r point creation, echo=FALSE}
+lnd_point = st_point(c(18.002186, 53.131825)) 
+lnd_geom = st_sfc(lnd_point, crs = st_crs(world))          
+lnd_attrib = data.frame(
+  name = "Dom Wojtka",
+  address.street = "Henryka Sienkiewicza",
+  address.number = 30,
+  address.appartment = 4,
+  temperature = 7,
+  date = as.Date("2020-04-25") 
+  )
+lnd_sf = st_sf(lnd_attrib, geometry = lnd_geom) 
+
+polska <- world %>% filter(name_long == "Poland")
+```
+
+### Wyświetlanie na mapie
+
+```{r plot map, echo=FALSE}
+ggplot() +
+  geom_sf(data = world) +
+  geom_sf(data = lnd_sf)
+```
+
+## Zajęcia3::ćwiczenie2
+
+* Stwórzcie obiekt będący poligonem (kwadratem) otaczającym Polskę,
+* Stwórzcie linię przecinającą Polskę na część wschodnią i zachodnią (mniej więcej przebiegającą przez rzekę Wisłę). Niech linia ta składa się z 10 punktów.
+* Wyświetlcie na mapie kontur Polski ze zbioru world, oraz utworzone obie warstwy.
+* Jaką powierzchnię ma Polska?
+* Jaką długość ma granica Polski?
+
+```{r echo=FALSE}
+polig <- list(rbind(c(14,49), c(14,55), c(24,55), c(24,49) ,c(14,49)))
+kwadrat <- st_polygon(polig) %>% 
+  st_sfc(crs = st_crs(world)) %>% 
+  st_sf()
+
+linia_punkty <- rbind(c(19.8, 49.2), c(20, 49.85), c(20.5, 50), c(21, 51), c(21.5, 51.5), c(20, 52.3), c(19.7, 52.48), c(20.1, 52.8), c(18.5, 54), c(18.8, 54.43))
+line <- st_linestring(linia_punkty) %>% 
+  st_sfc(crs = st_crs(world)) %>% 
+  st_sf()
+
+ggplot() +
+  geom_sf(data = polska) +
+  geom_sf(data = kwadrat, fill=NA) +
+  geom_sf(data = line)
+
+```
+``` {r echo=FALSE}
+granice <- st_cast(x=polska, to='MULTILINESTRING')
+```
+
+
+Długość granic Polski wg obliczeń z datasetu world wynosi  `r  format(st_length(granice), nsmall=2, small.interval=3, decimal.mark=',')`. Realna długość polskiej granicy wynosi 3511 km. 
+Na powyższej mapie widać uproszczoną linię reprezentującą granicę. W rzeczywistości granica jest bardziej poszarpana.
+
+Powierzchnia Polski wynosi `r format(polska$area_km2, scientific = FALSE)` [km^2^]. Dane pobrane z datasetu world, pole area_km2. Nie umiem obliczyć powierzchni poligonu. Funkcja st_area daje wynik 0.
+
+## Zajęcia3::ćwiczenie3
+```{r echo=FALSE}
+powiaty <- st_read(dsn='../data/powiaty.gml', quiet = TRUE)
+```
+Połączyć bank danych lokalnych z rejestrem granic
+
+### Liczba klubów sportowych w powiatach
+```{r echo=FALSE}
+powiaty$woj <- powiaty$kodJednostki %/% 100
+
+sport <- read.csv('../data/powiaty_sport.csv', sep = ";")
+sport$nowyKod <- sport$Kod / 1000
+
+sport %>% 
+  select(nowyKod, kluby = kluby.2018..szt..) -> sportToJoin
+#sportToJoin
+
+powiaty %>% 
+  select(kodJednostki, woj) -> powiatyToJoin
+
+powiatySport <- left_join(powiatyToJoin,sportToJoin,
+                          by=c("kodJednostki"="nowyKod"))
+
+powiatySport %>% 
+  ggplot() +
+  geom_sf(aes(fill=kluby))
+```
+
+### Liczba klubów sportowych w powiatach województwa śląskiego
+```{r echo=FALSE}
+powiatySport %>% 
+  filter(woj == 24) %>% 
+  ggplot() +
+  geom_sf(aes(fill=kluby))
+```
