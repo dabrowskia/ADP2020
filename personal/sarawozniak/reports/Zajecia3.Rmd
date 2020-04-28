@@ -1,0 +1,83 @@
+---
+title: "Zajecia3"
+author: "Sara Wozniak"
+date: "25 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+ 
+```{r}
+library(spData)
+library(dplyr)
+library(ggplot2)
+library(sf)
+```
+
+```{r}
+linestring_matrix = rbind(c(13, 53), c(14, 50))
+line <- st_linestring(linestring_matrix) %>%
+  st_sfc(crs=4326)%>%
+  st_sf()
+
+```
+
+```{r}
+polygon_list = list(rbind(c(13.9, 55), c(24.2, 55), c(24.2, 48.9), c(14, 48.9), c(13.9, 55)))
+kwadrat <- st_polygon(polygon_list) %>%
+  st_sfc(crs = 4326)%>%
+  st_sf()
+```
+
+```{r}
+Polska <-world %>%
+  filter(name_long =="Poland")
+```
+## Polska w kwadracie i dowolny odcinek
+```{r}
+ggplot() +
+  geom_sf(data = kwadrat) +
+  geom_sf(data = Polska) +
+  geom_sf(data = line)
+```
+
+```{r}
+powiaty<- st_read(dsn = 'j:/Documents/ADP2020/personal/sarawozniak/data/Powiaty.shp')
+
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+
+```
+
+```{r}
+plec <- readxl::read_xlsx('J:/Documents/ADP2020/personal/sarawozniak/data/LUDNOSC_PLEC.xlsx')
+
+dane <- powiaty %>%
+  left_join(plec, by = c('JPT_KOD_JE' = 'Kod')) 
+
+```
+
+## Mapa Polski
+```{r}
+#plot(powiaty) 
+
+dane %>% 
+  ggplot(aes(fill=udzialK, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Udział procentowy kobiet w Polsce') 
+```
+
+### Dane mężczyzn
+
+```{r}
+Dane_mezczyzn <-summary(dane$mężczyźni)
+Dane_mezczyzn
+
+```
+### Dane kobiet
+```{r}
+Dane_kobiet<-summary(dane$kobiety)
+Dane_kobiet
+```
+
