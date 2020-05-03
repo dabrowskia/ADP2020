@@ -14,7 +14,7 @@ library("dplyr")
 ```
 **CTRL+SHIFT+K** - to compile the file
 
-# world dataset tasks
+# World dataset tasks
 
 **Wyświetlcie mapę krajów Europejskich  wg liczby ludności**
 ```{r}
@@ -56,6 +56,16 @@ plot(x=world$lifeExp, y=world$gdpPercap)
 
 
 # Raster
+
+W przypadku problemów z spDataLarge zainstalować pakiet według instrukcji w repo:
+
+https://github.com/Nowosad/spDataLarge
+
+```{r}
+# install.packages("spDataLarge", repos = "https://nowosad.github.io/drat/", type = "source")
+```
+
+
 ```{r}
 raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
 new_raster = raster(raster_filepath)
@@ -64,13 +74,13 @@ new_raster
 plot(new_raster)
 ```
 
-** Jaka jest maksymalna wysokość w danym obrazie rastrowym?**
+**Jaka jest maksymalna wysokość w danym obrazie rastrowym?**
 ```{r}
 max(new_raster[], na.rm = TRUE)
 ```
 
 
-** Jaki jest rozkład wartości obrazu rastroweg**
+**Jaki jest rozkład wartości obrazu rastroweg**
 ```{r}
 hist(new_raster, maxpixels=250000)
 ```

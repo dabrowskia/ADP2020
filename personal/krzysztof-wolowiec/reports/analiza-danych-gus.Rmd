@@ -1,0 +1,17 @@
+---
+title: "Analiza danych GUS"
+author: "Krzysztof Wołowiec"
+date: "3 05 2020"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+```
+
+```{r}
+
+
+```
+
