@@ -69,4 +69,14 @@ ggplot()+
 
 ```
 
+#Zadanie 3
+W parach:
+Wejdźcie na stronę Banku Danych Lokalnych 
+Wybierzcie interesujące Was zagadnienie (spis ludności, handel i gastronomia, kultura i sztuka, etc.)
+Pobierzcie dane dla interesującego Was podziału (gminy, powiaty, województwa)
+Wykorzystajcie dane z Państwowego Rejestru Granic do złączenia z danymi tabelarycznymi.
+Wykonajcie eksplorację i wizualizację danych.
 
+```{r }
+ 
+```
