@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 ```
 
 ```{r}
@@ -15,6 +15,8 @@ library(sf)
 library(dplyr)
 library(ggplot2)
 ```
+
+## średnie wynagrodzeni w 2018 roku.
 
 ```{r}
 dane1 <- st_read(dsn = 'J:/Desktop/ADP2020/ne_10m_populated_places.shp')
