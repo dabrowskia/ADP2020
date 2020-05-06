@@ -1,0 +1,56 @@
+---
+title: 'Zajecia trzecie'
+author: Tomasz Furgalski
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(sf) 
+library(raster)
+library(spData)
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+lnd_point = st_point(c(18,53))
+lnd_geom = st_sfc(lnd_point, crs = 4326)
+lnd_attrib = data.frame(
+  name ="Toruń",
+  temperature = 8,
+  date = as.Date("2020-04-05"))
+
+lnd_sf =st_sf(lnd_attrib, geometry = lnd_geom)
+lnd_sf
+
+```
+
+
+
+```{r}
+polygon_list = list(rbind(c(2,100), c(50,100), c(70,300),c(2,100)))
+kwadrat <- st_polygon(polygon_list) %>%
+st_sfc(crs = 4326) %>%
+  st_sf()
+            
+```
+
+```{r}
+linestring_matrix = rbind(c(18,70))
+line <- st_linestring(linestring_matrix) %>%
+st_sfc(crs = 4326) %>%
+  st_sf()
+
+```
+
+```{r}
+ggplot()+
+  geom_sf(data=world)+
+  geom_sf(data=kwadrat)+
+  geom_sf(data=line)
+  
+
+```
