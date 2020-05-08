@@ -64,9 +64,9 @@ st_length(granicaPol)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r}
-#populated_places <- st_read(dsn = "j:/Desktop/cfss/ADP2020/data/ne_10m_populated_places_simple.shp")
-#summary(populated_places)
-#hist(populated_places$rank_min)
+populated_places <- st_read(dsn = "../data/ne_10m_populated_places_simple.shp")
+# summary(populated_places)
+# hist(populated_places$rank_min)
 
 #powiaty<-st_read(dsn='data/ ')
 
