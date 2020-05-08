@@ -1,0 +1,83 @@
+---
+title: "Untitled"
+author: "Adam Grochowski"
+date: "08-05-2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(dplyr)
+library(ggplot2)
+```
+
+# 1.
+
+```{r}
+world %>%
+  filter(continent == "Europe") %>%
+  dplyr::select(pop) %>%
+  ggplot(aes(fill=pop)) +
+    geom_sf()
+```
+
+
+
+# 2. 
+
+
+Najmniejszą liczbę ludności ma Grenlandia.
+
+```{r}
+world %>%
+  arrange(pop) %>%
+  dplyr::select(name_long,pop) %>%
+  top_n(-1,wt=pop)
+```
+
+# 3. 
+```{r}
+world %>%
+  filter(continent == "Asia") %>%
+  count() 
+```
+
+
+# 4.
+
+```{r}
+world %>% 
+  filter(type == 'Sovereign country') %>% 
+  ggplot(aes(x = area_km2)) + 
+  geom_histogram(bins = 30)
+```
+
+# 
+
+```{r}
+world %>% 
+  ggplot(aes(x = lifeExp, y = gdpPercap)) + 
+  geom_point()
+```
+
+
+# 6. 
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+max(values(new_raster))
+```
+
+---
+# 7.Jaki jest rozkład wartości obrazu rastrowego?
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+hist(new_raster, maxpixels=250000, main = "Rozkład")
+```
