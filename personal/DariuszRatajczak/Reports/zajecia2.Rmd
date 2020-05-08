@@ -7,12 +7,6 @@ output: html_document
 
 
 ```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-
-```
-
-```{r}
-
 library(sf)
 library(fs)
 library(tidyverse)
@@ -21,11 +15,12 @@ library(raster)
 library(devtools)
 library(spData)
 library(dplyr)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
-## ZADANIA
+# ZADANIA
 
-## 1. Wyswietlić mapę krajów Europejskich  wg liczby ludności.
+## 1. Wyswietlić mapę krajów Europejskich wg liczby ludności.
 
 ```{r}
 world %>% 

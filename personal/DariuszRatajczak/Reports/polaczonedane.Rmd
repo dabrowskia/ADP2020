@@ -13,7 +13,7 @@ library(readxl)
 knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```
 
-```{r}
+```{r include=FALSE}
 powiaty <- st_read(dsn = 'J:/ADP2020/personal/DariuszRatajczak/data/Powiaty.shp')
 powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
 powiaty <- powiaty %>% 
@@ -23,7 +23,6 @@ wynagrodzenie <- read_xlsx('J:/ADP2020/personal/DariuszRatajczak/data/Wynagrodze
                            sheet = 2)
 dane <- powiaty %>%
   left_join(wynagrodzenie, by = c('JPT_KOD_JE' = 'Kod'))
-
 ```
 
 ```{r}
