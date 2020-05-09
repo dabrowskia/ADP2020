@@ -6,7 +6,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-load("J:/Desktop/cfss/ADP2020/data/ratajeNieruchomosci2.Rdata")
+#load("J:/Desktop/cfss/ADP2020/data/ratajeNieruchomosci2.Rdata")
 library(raster)
 library(spData)
 library(dplyr)
@@ -56,6 +56,19 @@ plot(prognoza.rataje)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r}
+library (raster)
+DEM.Polska <-getData('alt', country='POL', mask=TRUE)
+DEM.Polska[ ]
+med.dem <- median(DEM.Polska[ ], na.rm = T)
+max.dem <- max(DEM.Polska[ ], na.rm = T)
+min.dem <-min(DEM.Polska[], na.rm =T)
+
+DEM.Polska.reclass <- reclassify(x = DEM.Polska,
+                              rcl = matrix(c(0,max.dem,0,
+                                            min.dem - 1 ,0,1),
+                                           ncol=3,byrow=T))
+DEM.Polska.aggr <- raster::aggregate(x = DEM.Polska, fact=2, fun=mean)
+plot(DEM.Polska)
 
 ```
 
