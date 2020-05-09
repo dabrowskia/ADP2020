@@ -1,0 +1,51 @@
+---
+title: "nieruchomosciRataje"
+author: "Magdalena Grzegorzewska"
+date: "9 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(caret)
+library(corrplot)
+library(ggplot2)
+library(sf)
+library(raster)
+```
+
+## Nieruchomosci rataje
+
+
+```{r pressure, echo=FALSE}
+load("ratajeNieruchomosci2.Rdata")
+
+summary(wtorne.rataje)
+View(rataje)
+plot(rataje)
+```
+
+```{r}
+load("ratajeNieruchomosci2.Rdata")
+
+wtorne.rataje.df <- st_set_geometry(wtorne.rataje, NULL)
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+
+cvCtr <- trainControl(method = "repeatedcv",
+                      number = 10,
+                      repeats = 2)
+
+linearModel <- train(wtorne.rataje.df,
+                     wtorne.rataje.df$Cn_m2_l,
+                     method = "glm", metric = "RMSE",
+                     tuneLength = 5, trControl = cvCtr)
+
+linearModel <- train(data = wtorne.rataje.df,
+                     Cn_m2_l~ .,
+                     method = "lm", metric = "RMSE",
+                     tuneLength = 5, trControl = cvCtr)
+
+summary(linearModel)
+
+```
