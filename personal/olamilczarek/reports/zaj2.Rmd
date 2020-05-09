@@ -64,6 +64,19 @@ ggplot(world,mapping=aes(x=gdpPercap,y=lifeExp))+
 ##Slajd16
 ##Jaka jest maksymalna wysokość w danym obrazie rastrowym?
 ```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+ new_raster = raster(raster_filepath)
+new_raster
+new_raster[ ]
+plot(new_raster)
+
+```
+```{r}
+max(new_raster[],na.rm = NA)
 ```
 
 ##Jaki jest rozkład wartości obrazu rastrowego?
+```{r}
+hist(new_raster)
+```
+
