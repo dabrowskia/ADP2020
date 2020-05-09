@@ -1,0 +1,95 @@
+---
+title: "Zajęcia 3"
+author: "Dominika Wojciechowska"
+date: "25 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r}
+library("spData")
+library("ggplot2")
+library("dplyr")
+library("sf")
+
+```
+
+## Zadanie 0 - punkt w Posce na mapie świata
+
+```{r}
+
+poznan <- st_point(c(16.9, 52.5)) %>% 
+  st_sfc(crs  = st_crs(world)) %>%
+  st_sf()
+ggplot() +
+  geom_sf(data=world) +
+  geom_sf(data = poznan, size = 3, col = 'dark green') + 
+  theme_light()
+
+```
+
+## Zadanie 1 - poligon otaczający Polskę, linia przecinająca Polskę (mniej więcej przebiegającą przez rzekę Wisłę)
+
+```{r}
+
+
+polska <-world %>%
+  filter(name_long =="Poland")
+
+polygon_list = list(rbind(c(14, 55), c(24.1, 55), c(24.1, 49), c(14, 49), c(14, 55)))
+kwadrat <- st_polygon(polygon_list) %>%
+  st_sfc(crs = 4326)%>%
+  st_sf()
+
+linestring_matrix = rbind(c(18, 54.8), c(21, 49.33))
+line <- st_linestring(linestring_matrix) %>%
+  st_sfc(crs=4326)%>%
+  st_sf()
+
+ggplot() +
+  geom_sf(data = kwadrat) +
+  geom_sf(data = polska) +
+  geom_sf(data = line) +
+  theme_light()
+  
+
+
+
+
+```
+
+
+## Zadanie 2
+
+```{r}
+
+# populated_places <- st_read(dsn = '../data/ne_10m_populated_places_simple.shp')
+
+
+powiaty <- st_read( dsn = '../data/jednostki_organizacyjne/Powiaty.shp')
+
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+
+
+wypadki <- readxl::read_xlsx('../data/bdl/wypadki.xlsx', sheet = 2)
+
+
+#do danych wektorowych (powiaty) dołaczamy tabelkę 
+
+df <-  powiaty %>% 
+  left_join(wypadki, 
+            by = c('JPT_KOD_JE' = 'Kod'))
+
+df$Wypadki %>% summary()
+
+ggplot(df, aes(fill = Wypadki)) + 
+  geom_sf()
+
+
+```
+
+
+
