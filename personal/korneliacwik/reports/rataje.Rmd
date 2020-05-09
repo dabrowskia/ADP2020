@@ -1,0 +1,76 @@
+---
+title: "Rataje - nieruchomości"
+author: "Kornelia Ćwik"
+date: "9 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(sf)
+library(corrplot)
+library(caret)
+```
+
+## Wczytanie danych
+
+```{r}
+load("../../../data/ratajeNieruchomosci2.Rdata")
+```
+
+## Eksploracja danych
+```{r}
+wtorne.rataje.df <-st_set_geometry(wtorne.rataje, NULL)
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+summary(wtorne.rataje.df)
+
+wtorne.rataje.df %>%
+  select(-rok)  %>%
+  cor() %>%
+  corrplot(tl.cex = 0.5,tl.col = 'black')
+
+ggplot(data = wtorne.rataje.df) +
+  geom_histogram(aes(x = Pwrzchn))
+
+ggplot(data = wtorne.rataje.df) +
+  geom_bar(aes(x = rok))
+
+ggplot(data = wtorne.rataje.df) +
+  geom_histogram(aes(x = Cn_m2_l))
+
+ggplot(data = wtorne.rataje.df) +
+  geom_histogram(aes(x = APTEKI_euclid))
+```
+
+
+## Umieszczenie danych na mapie
+```{r}
+ggplot(data = rataje) +
+  geom_sf() +
+  geom_sf(data = wtorne.rataje)
+```
+
+## Modelowanie
+```{r}
+cvCtrl <- trainControl(method = 'repeatedcv',
+                      number = 10,
+                      repeats = 2)
+linearModel <- train(data = wtorne.rataje.df,
+                     Cn_m2_l~.,
+                     method = 'lm', metric = 'RMSE',
+                     tuneLength = 5, trControl = cvCtrl)
+summary(linearModel) #patrzeć na adjusted R^2
+
+
+linearModel2 <- train(data = wtorne.rataje.df,
+                     Cn_m2_l~rok+Pwrzchn+Kndygnc+APTEKI_euclid+
+                       CENTRA_HANDLOWE_euclid+CMENTARZE_euclid+DROGI_GLOWNE_euclid+
+                       KOMINY_euclid+PRZEDSZKOLA_euclid+
+                       SZKOLA_PODSTAWOWA_euclid+SZKOLA_PONADPODSTAWOWA_euclid,
+                     method = 'lm', metric = 'RMSE',
+                     tuneLength = 10, trControl = cvCtrl)
+summary(linearModel2)
+
+```
+
