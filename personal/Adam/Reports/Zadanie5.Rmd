@@ -1,0 +1,74 @@
+---
+  title: "Rataje"
+output: html_document
+
+---
+  
+  ```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#load("J:/Desktop/cfss/ADP2020/data/ratajeNieruchomosci2.Rdata")
+library(raster)
+library(spData)
+library(dplyr)
+library(spDataLarge)
+library(sf)
+library(ggplot2)
+library(lwgeom)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+  
+  ```{r cars}
+wtorne.rataje
+summary(wtorne.rataje)
+cor(wtorne.rataje$Pwrzchn,wtorne.rataje$rok)
+hist(wtorne.rataje$WARTA_euclid)
+hist(wtorne.rataje$APTEKI_euclid)
+hist(wtorne.rataje$CENTRA_HANDLOWE_euclid)
+cor.test(wtorne.rataje$WARTA_euclid,wtorne.rataje$DROGI_GLOWNE_euclid)
+ggplot()+geom_sf(data=rataje)+geom_sf(data = wtorne.rataje$geometry, size = 2, col = 'dark green')
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+  
+  ```{r pressure, echo=FALSE}
+library(corrplot)
+wtorne.rataje.df <-st_set_geometry(wtorne.rataje,NULL)
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+wtorne.rataje.df%>%select(-rok)%>% cor() %>% corrplot()
+library(caret)
+cvCtrl <- trainControl(method = "repeatedcv", number =10, repeats =2)
+linearModel <- train(wtorne.rataje.df[,-1], wtorne.rataje.df$Cn_m2_l,
+                     method = "lm", metric = "RMSE",
+                     tuneLength = 5, trControl = cvCtrl)
+summary(linearModel)
+
+pred.params <-data.frame(rok=factor('2011'), Pwrzchn = 60, Kndygnc = 1)
+prognoza.rataje <-raster::predict (rataje.rastry, linearModel, const=pred.params)
+plot(prognoza.rataje)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+library (raster)
+DEM.Polska <-getData('alt', country='POL', mask=TRUE)
+DEM.Polska[ ]
+med.dem <- median(DEM.Polska[ ], na.rm = T)
+max.dem <- max(DEM.Polska[ ], na.rm = T)
+min.dem <-min(DEM.Polska[], na.rm =T)
+
+DEM.Polska.reclass <- reclassify(x = DEM.Polska,
+                                 rcl = matrix(c(0,max.dem,0,
+                                                min.dem - 1 ,0,1),
+                                              ncol=3,byrow=T))
+DEM.Polska.aggr <- raster::aggregate(x = DEM.Polska, fact=2, fun=mean)
+plot(DEM.Polska)
+
+```
+
