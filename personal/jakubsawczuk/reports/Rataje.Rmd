@@ -1,0 +1,89 @@
+---
+title: "Rataje"
+author: "Jakub Sawczuk"
+date: "14 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,warning = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(shiny)
+library(caret)
+```
+
+```{r}
+load('J:/Desktop/ADP2020/data/ratajeNieruchomosci2.Rdata')
+```
+
+
+# Eksploracja danych ze zbioru Rataje
+
+## Rataje to dzielnica w Poznaniu: (ma taki kształt)
+
+```{r}
+plot(rataje)
+```
+
+## W zbiorze znajduje się plik 'wtorne.rataje', w którym mamy informacje o kupnie/ sprzedaży nieruchomośći wraz z ceną z alokal i innymi przydatnymi rzeczami:
+
+```{r}
+as.tibble(wtorne.rataje)
+```
+
+## Niektóre zmienne są ze sobą skorelowane (zalężą os siebie):
+## np. odległość od apteki i biblioteki
+
+```{r}
+cor(wtorne.rataje$APTEKI_euclid, wtorne.rataje$BIBLIOTEKI_MUZEA_euclid)
+```
+
+## Podeobnie jest z innymi (cmentarze i centra handlowe):
+```{r}
+cor(wtorne.rataje$CMENTARZE_euclid, wtorne.rataje$CENTRA_HANDLOWE_euclid)
+```
+
+## Modelowanie przestrzenne
+```{r}
+
+## Upraszczamy nasze dane
+wtorne.rataje.df <- st_set_geometry(wtorne.rataje,NULL)
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+
+cvCtrl <- trainControl(method = 'repeatedcv',number = 10, repeats = 2)
+
+## Robimy model
+
+linearModel <- train(data = wtorne.rataje.df,
+                     Cn_m2_l ~ Pwrzchn + DROGI_GLOWNE_euclid + KOMINY_euclid + PRZEDSZKOLA_euclid +
+                       RONDA_euclid + SZKOLA_PODSTAWOWA_euclid + SZKOLA_PONADPODSTAWOWA_euclid
+                       +CENTRA_HANDLOWE_euclid + Kndygnc  ,
+                     method = "glm",     # metoda
+                     metric = "RMSE",
+                     tuneLength = 5, trControl = cvCtrl)
+
+summary(linearModel)
+```
+
+## Predykcja 
+## Cena mieszkania za m2 w 2012 roku, powierzchnia 73m2 i 3 kondygnacji
+```{r}
+pred.params <- data.frame(rok = factor('2012'),
+                          Pwrzchn = 73,
+                          Kndygnc = 3)
+
+prognoza.rataje <- raster::predict(rataje.rastry, 
+                                   linearModel,
+                                   const = pred.params) # ustaamy zmienne stale, wybrane wyzej
+
+plot(prognoza.rataje)
+```
