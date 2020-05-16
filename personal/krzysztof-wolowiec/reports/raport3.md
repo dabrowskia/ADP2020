@@ -1,11 +1,9 @@
----
-title: "Raport3"
-author: "Krzysztof Wołowiec"
-date: "3 05 2020"
-output: github_document
----
+Raport3
+================
+Krzysztof Wołowiec
+3 05 2020
 
-```{r warning=FALSE, message=FALSE}
+``` r
 library(sf)
 library(magrittr)
 library(ggplot2)
@@ -17,18 +15,36 @@ library(spData)
 Utworzyć punkt na terenie Polski i wyświetlenie go na mapie świata.
 
 Przykładowa wizualizacja na podstawie zbioru:
-```{r}
+
+``` r
 plot(world['continent'])
 ```
 
+![](raport3_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
 Układ współrzędnych zbioru `world`:
-```{r}
+
+``` r
 st_crs(world)
 ```
 
+    ## Coordinate Reference System:
+    ##   User input: EPSG:4326 
+    ##   wkt:
+    ## GEOGCS["WGS 84",
+    ##     DATUM["WGS_1984",
+    ##         SPHEROID["WGS 84",6378137,298.257223563,
+    ##             AUTHORITY["EPSG","7030"]],
+    ##         AUTHORITY["EPSG","6326"]],
+    ##     PRIMEM["Greenwich",0,
+    ##         AUTHORITY["EPSG","8901"]],
+    ##     UNIT["degree",0.0174532925199433,
+    ##         AUTHORITY["EPSG","9122"]],
+    ##     AUTHORITY["EPSG","4326"]]
+
 **Finalne rozwiązanie: dodanie punktu do mapy:**
 
-```{r}
+``` r
 point_poland <- st_point(c(17, 52)) %>%
   st_sfc(crs = st_crs(world)) %>%
   st_sf()
@@ -36,12 +52,13 @@ point_poland <- st_point(c(17, 52)) %>%
 ggplot() +
   geom_sf(data = world) +
   geom_sf(data = point_poland, size=4, col='red')
-
 ```
+
+![](raport3_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 # Zadanie 2 - Zadania o Polsce
 
-```{r}
+``` r
 # Zadanie 2.1
 poland <- world[world$name_long == 'Poland',]
 bbox_pl <- st_bbox(poland)
@@ -80,14 +97,18 @@ ggplot() +
   theme_light()
 ```
 
+![](raport3_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ## Zadania 2.4 i 2.5
 
-Rzeczywiste dane nieco się różnią od poniższych z uwagi na poziom generalizacji. 
-Przyjmuję jednak, że chodziło o statystyki na podstawie poligonów.
+Rzeczywiste dane nieco się różnią od poniższych z uwagi na poziom
+generalizacji. Przyjmuję jednak, że chodziło o statystyki na podstawie
+poligonów.
 
-```{r}
+``` r
 c("Powierzchnia Polski [km2]" = poland$area_km2, 
   "Granica Polski [km]" = st_length(poland) / 1000)
 ```
 
+    ## Powierzchnia Polski [km2]       Granica Polski [km] 
+    ##                310402.333                  2384.913

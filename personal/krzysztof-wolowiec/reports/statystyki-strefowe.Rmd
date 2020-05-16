@@ -1,0 +1,103 @@
+---
+title: "Statystyki Strefowe"
+author: "Krzysztof Wołowiec"
+date: "16 05 2020"
+output: github_document
+---
+
+
+```{r}
+library(raster)
+library(sf)
+library(reshape2)
+library(cowplot)
+```
+
+
+```{r warning=FALSE, message=FALSE}
+DEM.Poland <- getData('alt', country='PL', mask=TRUE)
+```
+
+```{r}
+plot(DEM.Poland)
+```
+## Podstawowe statystyki dla obszaru całej Polski
+
+```{r warning=FALSE}
+summary(DEM.Poland)
+```
+
+## Statystyki dla województw
+
+```{r}
+woj <- read_sf('../data/woj/Wojewodztwa.shp')
+```
+
+Zonal przyjmuje jako drugi argument **raster**, natomiast województwa mamy w formie **geometrii** (*shapefile*).
+To nie zadziała:
+```{r}
+#zonal(x=DEM.Poland, z=woj, fun='mean', na.rm=T)
+```
+
+Skorzystałem z funkcji `extract`:
+
+```{r}
+woj.el.mean <- extract(DEM.Poland, woj, fun = 'mean', na.rm=T, df=T, weights=T)
+woj.el.max <- extract(DEM.Poland, woj, fun = max, na.rm=T, df=T)
+woj.el.min <- extract(DEM.Poland, woj, fun = min, na.rm=T, df=T)
+```
+
+```{r}
+woj.el.stats <- data.frame(woj.el.mean, woj.el.max, woj.el.min) %>%
+  rename(el.min = POL_msk_alt.2,
+         el.max = POL_msk_alt.1,
+         el.mean = POL_msk_alt) %>%
+  select(-c(ID.1, ID.2))
+
+woj <- woj %>% mutate(ID = row_number())
+
+woj.el.stats.geom <- left_join(x = woj, 
+                 y = woj.el.stats, 
+                 by = 'ID')
+
+woj.el.stats.geom %>% select(JPT_NAZWA_, el.mean, el.max, el.min)
+```
+
+
+```{r}
+pmin <- ggplot() + geom_sf(data=woj.el.stats.geom, aes(fill=el.min))
+pmax <- ggplot() + geom_sf(data=woj.el.stats.geom, aes(fill=el.max))
+pmean <- ggplot() + geom_sf(data=woj.el.stats.geom, aes(fill=el.mean))
+plot_grid(pmin, pmax, pmean)
+```
+
+Ustawienie w ggplocie skali kolorów oraz przedziałów wartości dla zmiennych jest dramatem.
+
+```{r}
+ggplot(woj.el.stats.geom, aes(x=reorder(JPT_NAZWA_, el.mean, FUN = median))) +
+  geom_errorbar(aes(ymin=el.min, ymax=el.max)) +
+  geom_point(aes(y=el.mean)) +
+  labs(title='Podstawowe statystyki strefowe dla województw',
+       subtitle='Rozstęp wysokości i średnia na podstawie Numerycznego Modelu Terenu',
+       x='', y='Wysokość') +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, face = 'bold', size=12, vjust=0)) +
+  coord_flip()
+```
+
+W dolnośląskim średnia jest niższa niż w śląskim i podkarpackim, znacznie bliżej mu pod tym względem do świętokrzystkiego, jednak max jest  większy od dwóch wspomnianych województw. Rejon śnieżki jest znacznie wyżej położony niż Beskid Śląski, czy Bieszczady, jednak dolnośląskie obejmuje również nieco większe obszary terenów niżej położonych.
+
+```{r}
+woj.el.stats.geom
+```
+
+
+
+## Zastosowanie funckji `focal` do analizy sąsiedztwa
+
+```{r}
+binaryRaster <- raster(x = matrix(sample(c(0,1), 10000, replace = T), ncol = 100, nrow = 100))
+plot(focal(binaryRaster, w = matrix(1, nrow = 3, ncol = 3), fun = 'sum'))
+```
+
+Im bardziej zielony piksel, tym więcej jedynek ma w sąsiedztwie - jakby to porównać do gry w Sapera - wokół takich punktów jest więcej min :)

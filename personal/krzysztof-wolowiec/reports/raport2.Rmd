@@ -2,17 +2,17 @@
 title: "Zajęcia2"
 author: "Krzysztof Wołowiec"
 date: "4 04 2020"
-output: html_document
+output: github_document
 ---
 
 ## Biblioteki
-```{r}
-library('sf')
-library("raster")
-library("spData")
-library("dplyr")
+```{r warning=FALSE, message=FALSE}
+library(sf)
+library(raster)
+library(spData)
+library(dplyr)
+library(ggplot2)
 ```
-**CTRL+SHIFT+K** - to compile the file
 
 # World dataset tasks
 
@@ -41,12 +41,14 @@ world %>%
 
 
 **Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)**
-```{r}
+```{r message=FALSE}
 world %>%
   filter(type == "Sovereign country") %>%
   select(area_km2) -> areas
 
-hist(areas$area_km2)
+ggplot(areas, aes(x=area_km2)) +
+  geom_histogram() +
+  scale_x_log10()
 ```
 
 **Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap**
