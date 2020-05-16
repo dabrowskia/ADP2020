@@ -6,11 +6,14 @@ output: github_document
 ---
 
 
-```{r}
+```{r message=FALSE, warning=FALSE}
 library(raster)
 library(sf)
 library(reshape2)
 library(cowplot)
+library(dplyr)
+library(ggplot2)
+library(tmap)
 ```
 
 
@@ -21,6 +24,7 @@ DEM.Poland <- getData('alt', country='PL', mask=TRUE)
 ```{r}
 plot(DEM.Poland)
 ```
+
 ## Podstawowe statystyki dla obszaru całej Polski
 
 ```{r warning=FALSE}
@@ -41,7 +45,7 @@ To nie zadziała:
 
 Skorzystałem z funkcji `extract`:
 
-```{r}
+```{r warning=FALSE, message=FALSE}
 woj.el.mean <- extract(DEM.Poland, woj, fun = 'mean', na.rm=T, df=T, weights=T)
 woj.el.max <- extract(DEM.Poland, woj, fun = max, na.rm=T, df=T)
 woj.el.min <- extract(DEM.Poland, woj, fun = min, na.rm=T, df=T)
@@ -64,14 +68,17 @@ woj.el.stats.geom %>% select(JPT_NAZWA_, el.mean, el.max, el.min)
 ```
 
 
-```{r}
-pmin <- ggplot() + geom_sf(data=woj.el.stats.geom, aes(fill=el.min))
-pmax <- ggplot() + geom_sf(data=woj.el.stats.geom, aes(fill=el.max))
-pmean <- ggplot() + geom_sf(data=woj.el.stats.geom, aes(fill=el.mean))
-plot_grid(pmin, pmax, pmean)
+
+```{r message=FALSE}
+basemap <- tm_shape(woj.el.stats.geom) + tm_borders()
+
+map.min <- basemap + tm_fill(col = 'el.min', palette = '-BrBG')
+map.mean <- basemap + tm_fill(col = 'el.mean',  palette = 'YlOrBr')
+map.max <- basemap + tm_fill(col = 'el.max', palette = 'YlOrBr')
+
+tmap_arrange(map.min, map.max, map.mean)
 ```
 
-Ustawienie w ggplocie skali kolorów oraz przedziałów wartości dla zmiennych jest dramatem.
 
 ```{r}
 ggplot(woj.el.stats.geom, aes(x=reorder(JPT_NAZWA_, el.mean, FUN = median))) +
