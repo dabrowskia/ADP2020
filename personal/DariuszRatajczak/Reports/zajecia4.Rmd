@@ -1,0 +1,105 @@
+---
+title: "Zajecia4"
+author: "Dariusz Ratajczak"
+date: "9 05 2020"
+output: html_document
+---
+
+```{r setup, include = FALSE}
+library(sf)
+library(raster)
+library(dplyr)
+library(tibble)
+library(tidyr)
+library(corrplot)
+library(caret)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+# ZADANIA
+
+## Zadanie 1
+```{r}
+DEM.Pl <- getData('alt', country = 'POL', mask=TRUE)
+plot(DEM.Pl,
+     main = 'Ukształtowanie terenu',
+     col = rainbow(n = 100))
+```
+
+## Zadanie 2
+
+```{r}
+max.dem <- max(DEM.Pl[ ], na.rm = TRUE)
+min.dem <- min(DEM.Pl[ ], na.rm = TRUE)
+
+rec.mat <- matrix(c(0, max.dem, 0,
+                  min.dem - 1, 0, 1),
+                  ncol = 3, byrow = TRUE)
+                
+DEM.Pl.reclass <- reclassify(x = DEM.Pl,
+                             rcl =rec.mat)
+plot(DEM.Pl.reclass,
+     main = 'Depresja')
+```
+
+## Zadanie 3
+### 1) Wczytanie danych
+```{r echo=TRUE}
+load("../../../data/ratajeNieruchomosci2.Rdata")
+```
+### 2) Eksploracja danych
+# 
+#### a) Ogólne sprawdzenie danych (nazwy zmiennych, liczba zmienych, liczba obserwacji, typy danych)
+```{r}
+#
+glimpse(wtorne.rataje)
+```
+#
+#### b) Sprawdzenie czy w zbiorze danych są wartości typu NA
+```{r}
+data.frame(wtorne.rataje) %>% mutate_all(.funs = is.na) %>% summarise_all(.funs = sum) %>% glimpse()
+```
+#
+#### c) Sprawdzenie korelacji między zmiennymi
+```{r}
+wtorne.rataje.df <- st_set_geometry(wtorne.rataje, NULL)
+wtorne.rataje.df %>%
+  cor() %>%
+  corrplot(tl.cex = .6)
+```
+```{r echo=FALSE}
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+cC <- trainControl(method = "repeatedcv",
+                   number = 10,
+                   repeats = 2)
+
+lM <- train(wtorne.rataje.df[,-1],
+            wtorne.rataje.df[,1],
+            method = "lm",
+            metric = "RMSE",
+            tuneLength = 5,
+            trControl = cC)
+
+r <- '2014'
+p <- 55
+k <- 3
+
+pP <- data.frame(rok = factor(r),
+                 Pwrzchn = p,
+                 Kndygnc = k)
+
+prognoza.rataje <- raster::predict(rataje.rastry, lM,
+                                   const = pP)
+```
+#
+### 3) Wyświetlenie na mapie lokalizacji nieruchomości
+#### - rok sprzedaży: `r r`
+#### - powierzchnia: `r p` m$^{2}$
+#### - kondygnacja: `r k` piętro
+```{r}
+plot(prognoza.rataje)
+```
+
+#### Podsumowanie
+```{r}
+summary(lM)
+```
