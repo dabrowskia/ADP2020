@@ -7,27 +7,15 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r}
-install.packages("sf")
-install.packages("raster")
-install.packages('tidyverse')
-install.packages('fs')
-install.packages('spData')
-install.packages('dplyr')
-
-
-devtools::install_github("spDataLarge",repos = "http://Nowosad.github.io/drat",type = "source")
-devtools::install_github("Nowosa/spDataLarge")
-
 library(devtools)
 library(fs)
 library(raster)
 library(spData)
 library(sf)
 library(dplyr)
-
+library(ggplot2)
+library(raster)
+library(rgdal)
 ```
 
 ## Zadnaie 1
@@ -35,41 +23,84 @@ library(dplyr)
 Wyświetlcie mapę krajów Europejskich  wg liczby ludności
 
 ```{r zad 1}
-install.packages("sf")
-install.packages("raster")
-install.packages('tidyverse')
-install.packages('fs')
-install.packages('spData')
-install.packages('dplyr')
+plot(world[world$continent == "Europe","pop"])
 
+```
 
-devtools::install_github("spDataLarge",repos = "http://Nowosad.github.io/drat",type = "source")
-devtools::install_github("Nowosa/spDataLarge")
+## Zadnaie 2
 
-library(devtools)
-library(fs)
-library(raster)
-library(spData)
-library(sf)
-library(dplyr)
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r zad 2}
+minimalna <- min(world$pop, na.rm = TRUE)
+world[world$pop == minimalna,c("name_long","pop")]
+
+```
+
+## Zadnaie 3
+
+Ile krajów znajduje się w Azji?
+
+```{r zad 3}
+world_mini <- world[world$continent == "Asia","name_long"]
+nrow(world_mini)
+
 
 ```
 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Zadnaie 4
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country)
 
-```{r cars}
-summary(cars)
+```{r zad 4}
+worldSloverign <- world %>%
+  filter(type == "Sovereign country")%>%
+    mutate(area_km2_mutate = area_km2 / 10000)
+
+ggplot(worldSloverign, aes(x = area_km2_mutate)) +
+  geom_histogram(bins=50)
+
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+## Zadnaie 5
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+
+```{r zad 5}
+ggplot(world, aes(x = lifeExp, y = gdpPercap)) +
+  geom_point()
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+world %>%
+  ggplot(aes(x = lifeExp, y = gdpPercap)) +
+  geom_point()
+```
+
+ 
+
+## Zadanie 6
+# Dane Rastrowe
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+new_raster
+# new_raster[] <- shows the matrix
+plot(new_raster)
+```
+
+ 
+
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+```{r}
+max(new_raster[], na.rm = TRUE)
+```
+
+ 
+
+##  Zadanie 7
+Jaki jest rozkład wartości obrazu rastrowego
+```{r}
+hist(new_raster, maxpixels=250000)
