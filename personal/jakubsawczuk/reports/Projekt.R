@@ -7,23 +7,23 @@ library(spData)
 library(spDataLarge)
 library(caret)
 
-powiaty <- st_read(dsn = 'J:/Desktop/ADP2020/Jednostki_Administracyjne/Powiaty.shp')
+powiaty <- st_read(dsn = 'data/Jednostki_Administracyjne/Powiaty.shp')
 powiaty
 powiaty$JPT_KOD_JE <- paste0(powiaty$JPT_KOD_JE, '000')
 
-wynagrodzenia <- readxl::read_xlsx('J:/Desktop/ADP2020/Wynagrodzenia.xlsx', sheet = 2)
+wynagrodzenia <- readxl::read_xlsx('Wynagrodzenia.xlsx', sheet = 2)
 wynagrodzenia %>% mutate(wynagrodzenia_ogolem = Ogolem) -> nowewynagrodzenia
 nowewynagrodzenia
 
-malzenstwa <- readxl::read_xlsx('J:/Desktop/ADP2020/Malzenstwa.xlsx', sheet = 2)
-malzenstwa %>% mutate(malzenstwa_ogolem = ogÃ³Å‚em) -> nowemalzenstwa
+malzenstwa <- readxl::read_xlsx('Malzenstwa.xlsx', sheet = 2)
+malzenstwa %>% mutate(malzenstwa_ogolem = `ogÃ³Å‚em`) -> nowemalzenstwa
 nowemalzenstwa
 
-rozwody  <- readxl::read_xlsx('J:/Desktop/ADP2020/Rozwody.xlsx', sheet = 2)
-rozwody %>% mutate(rozwody_ogolem = ogÃ³Å‚em) -> nowerozwody
+rozwody  <- readxl::read_xlsx('Rozwody.xlsx', sheet = 2)
+rozwody %>% mutate(rozwody_ogolem = `ogÃ³Å‚em`) -> nowerozwody
 nowerozwody
 
-skolaryzacja  <- readxl::read_xlsx('J:/Desktop/ADP2020/Skolaryzacja.xlsx', sheet = 2)
+skolaryzacja  <- readxl::read_xlsx('Skolaryzacja.xlsx', sheet = 2)
 skolaryzacja
 
 tab1 <- powiaty %>% left_join(nowemalzenstwa,by = c('JPT_KOD_JE' = 'Kod'))
@@ -45,6 +45,10 @@ cvCtrl <- trainControl(method = 'repeatedcv',number = 10, repeats = 2)
 
 ## Robimy model
 
+#zwróæ uwagê na strukturê danych polaczona.df. Jest tam pe³no zmiennych 
+# tekstowych (w tym zmienna, któr¹ próbujesz modelowaæ). Ten model nie ma sensu.
+# Uporz¹dkuj dane, zamieñ je do postaci numerycznej i wybierz tylko te zmienne,
+# które mog¹ mieæ znaczenie (np. zmienna Nazwa, albo kody s¹ zbêdne)
 Model <- train(data = polaczona.df,
                malzenstwa_ogolem ~ .,
                      method = "glm", 

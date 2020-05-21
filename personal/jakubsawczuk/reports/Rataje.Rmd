@@ -22,7 +22,7 @@ library(caret)
 ```
 
 ```{r}
-load('J:/Desktop/ADP2020/data/ratajeNieruchomosci2.Rdata')
+load('../../../data/ratajeNieruchomosci2.Rdata')
 ```
 
 
