@@ -13,14 +13,11 @@ library(spData)
 library(sf)
 library(dplyr)
 library(ggplot2)
-
-
 ```
 
 ## Zadanie
 
 Zbiór danych world posiada współrzędne geograficzne w stopniach i dziesiętnych częściach stopni. Utwórzcie punkt, który będzie znajdował się gdzieś na terenie Polski i wyświetlcie go na mapie świata.
-
 
 ```{r pressure, echo=FALSE}
 punkt <- st_point(c(21.3, 53)) %>% 
@@ -78,5 +75,13 @@ Wykorzystajcie dane z Państwowego Rejestru Granic do złączenia z danymi tabel
 Wykonajcie eksplorację i wizualizację danych.
 
 ```{r }
- 
+powiaty <- st_read(dsn = 'J:/ADP2020/personal/magdalenagrzegorzewska/data/jednostki_administracyjne/Powiaty.shp')
+
+plot(powiaty) 
+
+names(powiaty)
+
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+
+
 ```
