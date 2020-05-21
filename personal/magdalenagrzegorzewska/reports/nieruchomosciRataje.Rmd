@@ -22,9 +22,12 @@ library(raster)
 load("ratajeNieruchomosci2.Rdata")
 
 summary(wtorne.rataje)
+glimpse(wtorne.rataje)
 View(rataje)
 plot(rataje)
 ```
+
+## Wczytanie danych i ich eksploracja
 
 ```{r}
 load("ratajeNieruchomosci2.Rdata")
@@ -48,4 +51,28 @@ linearModel <- train(data = wtorne.rataje.df,
 
 summary(linearModel)
 
+```
+
+## Poligon zawierający granice osiedla
+
+```{r}
+rataje %>% 
+  ggplot(aes(geometry=geometry)) +
+  geom_sf()
+```
+
+## Predykcja/model ceny metra kwadratowego nieruchomości z rynku wtórnego w obszarze osiedla Rataje 
+
+modelowanie tych cen oraz wizualizację predykcji cen metra kwadratowego nieruchomości dla mieszkania o wybranych przez Was parametrach (rok sprzedaży, kondygnacja i powierzchnia).
+
+```{r}
+pred.params <- data.frame(rok = factor(2013),
+                        Pwrzchn = 8,
+                        Kndygnc = 4)
+
+prognoza.rataje <- raster::predict(rataje.rastry,
+                                   linearModel,
+                                   const = pred.params)
+
+plot(prognoza.rataje)
 ```
