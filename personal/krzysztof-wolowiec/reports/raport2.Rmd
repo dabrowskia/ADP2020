@@ -1,0 +1,91 @@
+---
+title: "Zajęcia2"
+author: "Krzysztof Wołowiec"
+date: "4 04 2020"
+output: github_document
+---
+
+## Biblioteki
+```{r warning=FALSE, message=FALSE}
+library(sf)
+library(raster)
+library(spData)
+library(dplyr)
+library(ggplot2)
+```
+
+# World dataset tasks
+
+**Wyświetlcie mapę krajów Europejskich  wg liczby ludności**
+```{r}
+world %>% 
+  filter(continent == 'Europe') %>%
+  select(pop) %>%
+  plot()
+```
+
+**Który kraj posiada najmniejszą liczbę ludności i ile wynosi?**
+
+```{r}
+world %>%
+  filter(pop == min(world$pop, na.rm = TRUE)) %>%
+  select(name_long, pop)
+```
+
+**Ile krajów znajduje się w Azji?**
+```{r}
+world %>%
+  filter(continent=='Asia') %>%
+  count()
+```
+
+
+**Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)**
+```{r message=FALSE}
+world %>%
+  filter(type == "Sovereign country") %>%
+  select(area_km2) -> areas
+
+ggplot(areas, aes(x=area_km2)) +
+  geom_histogram() +
+  scale_x_log10()
+```
+
+**Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap**
+```{r}
+plot(x=world$lifeExp, y=world$gdpPercap)
+```
+
+
+# Raster
+
+W przypadku problemów z spDataLarge zainstalować pakiet według instrukcji w repo:
+
+https://github.com/Nowosad/spDataLarge
+
+```{r}
+# install.packages("spDataLarge", repos = "https://nowosad.github.io/drat/", type = "source")
+```
+
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+new_raster
+# new_raster[] <- shows the matrix
+plot(new_raster)
+```
+
+**Jaka jest maksymalna wysokość w danym obrazie rastrowym?**
+```{r}
+max(new_raster[], na.rm = TRUE)
+```
+
+
+**Jaki jest rozkład wartości obrazu rastroweg**
+```{r}
+hist(new_raster, maxpixels=250000)
+```
+
+
+
