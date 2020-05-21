@@ -4,7 +4,6 @@ author: "Magdalena Grzegorzewska"
 date: "25 04 2020"
 output:
   html_document: default
-  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -27,9 +26,10 @@ Zbiór danych world posiada współrzędne geograficzne w stopniach i dziesiętn
 punkt <- st_point(c(21.3, 53)) %>% 
   st_sfc(crs = st_crs(world)) %>%
     st_sf()
-    ggplot() +           
-   geom_sf(data=world) +
-     geom_sf(data=punkt, size = 4, col = 'dark green') +
+
+ggplot() +           
+  geom_sf(data=world) +
+    geom_sf(data=punkt, size = 4, col = 'dark green') +
       theme_light()
 
 ```

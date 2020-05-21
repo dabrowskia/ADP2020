@@ -103,4 +103,6 @@ max(new_raster[], na.rm = TRUE)
 ##  Zadanie 7
 Jaki jest rozkład wartości obrazu rastrowego
 ```{r}
-hist(new_raster, maxpixels=250000)
+#hist(new_raster, maxpixels=250000)
+```
+
