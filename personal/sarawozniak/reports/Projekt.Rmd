@@ -1,0 +1,101 @@
+---
+title: "Projekt"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE}
+library(spData)
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(plotly)
+library(corrplot)
+library(viridis)
+```
+
+
+```{r powiaty, echo = FALSE}
+powiaty<- st_read(dsn = 'j:/Documents/ADP2020/personal/sarawozniak/data/Powiaty.shp')
+
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+```
+
+
+```{r wynagrodzenia, echo=FALSE}
+wynagrodzenia <- readxl::read_xlsx('J:/Documents/ADP2020/personal/sarawozniak/data/Przecietne_wynagrodzenia_miesieczne.xlsx')
+
+ludnosc <- readxl::read_xlsx('J:/Documents/ADP2020/personal/sarawozniak/data/LUDNOSC_PLEC.xlsx')
+
+biblioteki <- readxl::read_xlsx('J:/Documents/ADP2020/personal/sarawozniak/data/Biblioteki.xlsx')
+
+dane <- powiaty %>%
+  left_join(wynagrodzenia, by = c('JPT_KOD_JE' = 'Kod')) %>%
+  left_join(ludnosc %>%
+              select(Kod, Ludnosc), by = c('JPT_KOD_JE' = 'Kod')) %>%
+  left_join(biblioteki%>%
+              select(Kod, czytelnicy), by = c('JPT_KOD_JE' = 'Kod'))
+
+dane <- dane %>%
+  mutate(wsp_czytelnikow = czytelnicy*(Ludnosc/1000))
+nrow(dane)
+
+```
+
+## Wykres przeciętnego miesięcznego wynagrodzenia w Polsce. Dane za rok 2018. 
+Najwyższe przeciętne wynagrodzenie jest w powiecie Jastrzębie-Zdrój ( +68% średniego wynagrodzenia w Polsce), a najniższe w powiecie kępińskim ( -34,2% średniego wynagrodzenia w Polsce).
+
+
+```{r wykres1, echo=FALSE}
+p <- dane %>% 
+  ggplot(aes(fill=przecietne_wynagrodzenie_miesieczne, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Przeciętne wynagrodzenie miesięczne w 2018 roku w Polsce',
+       fill = 'Przeciętne wynagrodzenie brutto')  +
+  scale_fill_viridis(10)
+
+ggplotly(p,
+  tooltip = c("JPT_NAZWA_","przecietne_wynagrodzenie_miesieczne"))
+
+```
+
+```{r, ECHO = FALSE}
+max_wynagrodzenie <- wynagrodzenia %>%
+  select(Nazwa, przecietne_wynagrodzenie_miesieczne) %>%
+  filter(przecietne_wynagrodzenie_miesieczne==max(wynagrodzenia$przecietne_wynagrodzenie_miesieczne))
+max_wynagrodzenie
+min_wynagrodzenie <- wynagrodzenia %>%
+  select(Nazwa, przecietne_wynagrodzenie_miesieczne) %>%
+  filter(przecietne_wynagrodzenie_miesieczne==min(wynagrodzenia$przecietne_wynagrodzenie_miesieczne))
+min_wynagrodzenie
+```
+## Przeciętne miesięczne wynagrodzenie w relacji do średniej krajowej
+
+
+```{r wspolczynniki, ECHO = FALSE}
+max_wspolczynnik_wynagrodzenia <- wynagrodzenia %>%
+  select(Nazwa, przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej) %>%
+  filter(przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej==max(wynagrodzenia$przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej))
+max_wspolczynnik_wynagrodzenia
+min__wspolczynnik_wynagrodzenia <- wynagrodzenia %>%
+  select(Nazwa, przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej) %>%
+  filter(przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej==min(wynagrodzenia$przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej))
+min__wspolczynnik_wynagrodzenia
+
+```
+
+## Korelacja między przeciętnym wynagrodzeniem, liczbą ludności w powiecie i współczynnikiem czytelników w powiecie (liczba czytelników na 1000 mieszkańców)
+Przeciętne wynagrodzenie w dużym stopniu zależy od liczby ludności powiatu i w mniejszym stopniu od współczynnika czytelników.
+
+```{r}
+dane.df <- st_set_geometry(dane, NULL)
+names(dane.df)
+dane.df %>%
+  select(przecietne_wynagrodzenie_miesieczne, wsp_czytelnikow, Ludnosc) %>%
+  cor() %>%
+  corrplot()
+```
+

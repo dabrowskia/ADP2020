@@ -1,0 +1,30 @@
+---
+title: "Rataje"
+author: "Sara Woźniak"
+date: "9 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(corrplot)
+library(sf)
+library(dplyr)
+load("../data/ratajeNieruchomosci2.Rdata")
+```
+
+```{r}
+wtorne.rataje.df <- st_set_geometry(wtorne.rataje, NULL)
+wtorne.rataje.df %>%
+  select(-rok) %>%
+  cor() %>%
+  corrplot()
+```
+
+```{r}
+names(wtorne.rataje)
+summary(wtorne.rataje.df)
+```
+
