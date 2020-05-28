@@ -1,0 +1,61 @@
+---
+title: "Rataje"
+author: "Julia D-Michalska"
+date: "15 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(sf)
+library(spData)
+library(ggplot2)
+library(raster)
+library(tidyverse)
+library(dplyr)
+library(spDataLarge)
+library(devtools)
+library(fs)
+library(rgdal)
+library(raster)
+library(corrplot)
+library(caret)
+
+```
+ 
+## Eksploracja danych
+
+```{r}
+load('../data/ratajeNieruchomosci2.Rdata')
+wtorne.rataje.df <- st_set_geometry(wtorne.rataje,NULL)
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+summary(wtorne.rataje.df)
+```
+
+```{r}
+cvCtrl <- trainControl(method = 'repeatedcv',number = 10, repeats = 2)
+Model <- train(wtorne.rataje.df[,-1], wtorne.rataje.df[,1],
+               method = "lm",
+               metric = "RMSE",
+               tuneLength = 5, trControl = cvCtrl)
+```
+
+```{r}
+summary(Model)
+```
+
+## Modelowanie cen
+
+```{r}
+pred.params <- data.frame(rok = factor('2011'),
+                          Pwrzchn = 60,Kndygnc = 1 )
+prognoza.rataje <- raster::predict(rataje.rastry, Model,
+                                   const = pred.params)
+```
+
+## Wizualizacja
+
+```{r}
+plot(prognoza.rataje)
+```
+
