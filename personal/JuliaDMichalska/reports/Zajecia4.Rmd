@@ -40,7 +40,7 @@ Model <- train(wtorne.rataje.df[,-1], wtorne.rataje.df[,1],
                tuneLength = 5, trControl = cvCtrl)
 ```
 
-```{r}
+```{r} 
 summary(Model)
 ```
 
