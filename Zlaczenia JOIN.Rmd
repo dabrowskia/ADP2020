@@ -37,7 +37,7 @@ polaczona <- powiaty %>% left_join(wynagrodzenia,
 ```
 
 ```{r}
-ggplot(polaczona, aes(fill=wynagrodzenia$Wartosc)) +
+ggplot(polaczona, aes(fill=polaczona$Ogolem)) +
   geom_sf()
 ```
 
