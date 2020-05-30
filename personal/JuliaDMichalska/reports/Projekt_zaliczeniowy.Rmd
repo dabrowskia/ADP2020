@@ -4,7 +4,7 @@ author: "Julia Drwęska-Michalska, Jakub Sawczuk"
 date: "26.05.2020"
 output: html_document
 ---
- 
+
 ```{r biblioteki, include=FALSE}
 library(tidyverse)
 library(sf)
