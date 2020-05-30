@@ -1,0 +1,51 @@
+---
+title: "Zajecia4"
+author: "Dominika Wojciechowska"
+date: "9 05 2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+```
+
+```{r}
+library("spData")
+library("ggplot2")
+library("dplyr")
+library("sf")
+library("raster")
+
+```
+
+
+## Zadanie 1 -
+
+DEM.Poland <-getData('alt', country='POL', mask=TRUE)
+
+plot(DEM.Poland)
+
+min.dem <- min(DEM.Poland[ ], na.rm = T)
+max.dem <- max(DEM.Poland[ ], na.rm = T)
+
+
+DEM.Poland.reclass <- reclassify(x = DEM.Poland,
+                                rcl = matrix(c(0,max.dem,0,
+                                -12,0, 1),
+                                ncol=3,byrow=T))
+                                
+plot(DEM.Poland.reclass)
+
+
+## Zadanie 2
+
+load('')
+
+
+
+
+                                
+                                
+
+

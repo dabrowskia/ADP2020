@@ -17,7 +17,7 @@ library("sf")
 
 ```
 
-## Zadanie 0 - punkt w Posce na mapie świata
+## Zadanie 0 - punkt w Polsce na mapie świata
 
 ```{r}
 
@@ -69,7 +69,7 @@ ggplot() +
 # populated_places <- st_read(dsn = '../data/ne_10m_populated_places_simple.shp')
 
 
-powiaty <- st_read( dsn = '../data/jednostki_organizacyjne/Powiaty.shp')
+powiaty <- st_read( dsn = 'j:/Desktop/jednostki_organizacyjne/Powiaty.shp')
 
 powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
 
