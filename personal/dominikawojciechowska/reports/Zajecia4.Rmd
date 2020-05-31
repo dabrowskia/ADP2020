@@ -20,7 +20,7 @@ library("raster")
 ```
 
 
-## Zadanie 1 -
+## Zadanie 1
 
 DEM.Poland <-getData('alt', country='POL', mask=TRUE)
 
@@ -38,9 +38,6 @@ DEM.Poland.reclass <- reclassify(x = DEM.Poland,
 plot(DEM.Poland.reclass)
 
 
-## Zadanie 2
-
-load('')
 
 
 
