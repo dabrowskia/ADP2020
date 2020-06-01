@@ -1,7 +1,7 @@
 ---
 title: "Analiza sytuacji w Polsce w wybranych zagadnieniach"
 author: "Julia Drwęska-Michalska, Jakub Sawczuk"
-date: "26.05.2020"
+date: "26-05-2020"
 output: html_document
 ---
 
