@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -331,6 +330,7 @@ summary {
   border: none;
   display: inline-block;
   border-radius: 4px;
+  background-color: transparent;
 }
 
 .tabset-dropdown > .nav-tabs.nav-tabs-open > li {
@@ -369,12 +369,12 @@ summary {
 </div>
 
 
-<pre><code>## -- Attaching packages -------------------------------------------------------------------------------- tidyverse 1.3.0 --</code></pre>
-<pre><code>## &lt;U+221A&gt; ggplot2 3.2.1     &lt;U+221A&gt; purrr   0.3.3
-## &lt;U+221A&gt; tibble  2.1.3     &lt;U+221A&gt; dplyr   0.8.3
+<pre><code>## -- Attaching packages --------------------------------------------- tidyverse 1.3.0 --</code></pre>
+<pre><code>## &lt;U+221A&gt; ggplot2 3.3.0     &lt;U+221A&gt; purrr   0.3.3
+## &lt;U+221A&gt; tibble  2.1.3     &lt;U+221A&gt; dplyr   0.8.5
 ## &lt;U+221A&gt; tidyr   1.0.0     &lt;U+221A&gt; stringr 1.4.0
 ## &lt;U+221A&gt; readr   1.3.1     &lt;U+221A&gt; forcats 0.4.0</code></pre>
-<pre><code>## -- Conflicts ----------------------------------------------------------------------------------- tidyverse_conflicts() --
+<pre><code>## -- Conflicts ------------------------------------------------ tidyverse_conflicts() --
 ## x dplyr::filter() masks stats::filter()
 ## x dplyr::lag()    masks stats::lag()</code></pre>
 <pre><code>## Linking to GEOS 3.6.1, GDAL 2.2.3, PROJ 4.9.3</code></pre>
@@ -402,23 +402,22 @@ summary {
 <div id="w-zbiorze-znajduje-się-plik-wtorne.rataje-w-którym-mamy-informacje-o-kupnie-sprzedaży-nieruchomośći-wraz-z-ceną-z-alokal-i-innymi-przydatnymi-rzeczami" class="section level2">
 <h2>W zbiorze znajduje się plik ‘wtorne.rataje’, w którym mamy informacje o kupnie/ sprzedaży nieruchomośći wraz z ceną z alokal i innymi przydatnymi rzeczami:</h2>
 <pre><code>## # A tibble: 1,008 x 21
-##    Cn_m2_l   rok Pwrzchn Kndygnc APTEKI_euclid BIBLIOTEKI_MUZE~
-##      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;   &lt;int&gt;         &lt;dbl&gt;            &lt;dbl&gt;
-##  1   5115.  2009    39.1       1          431.            1155.
-##  2   7673.  2010    40.4       0         1369.             517.
-##  3   7399.  2014    44.6       3         1369.             517.
-##  4   6548.  2008    50.4       1         1369.             517.
-##  5   6587.  2008    50.1       3         1369.             517.
-##  6   6702.  2009    40.4       0         1369.             517.
-##  7   7500   2011    40         5         1369.             517.
-##  8   7639.  2009    44.6       3         1369.             517.
-##  9   5720.  2013    50.7       0         1395.             544.
-## 10   6420   2009    50.4       2         1395.             544.
-## # ... with 998 more rows, and 15 more variables: BUD_PRZEM_euclid &lt;dbl&gt;,
-## #   CENTRA_HANDLOWE_euclid &lt;dbl&gt;, CMENTARZE_euclid &lt;dbl&gt;,
-## #   DROGI_GLOWNE_euclid &lt;dbl&gt;, JEZIORA_euclid &lt;dbl&gt;, KOMINY_euclid &lt;dbl&gt;,
-## #   KOSCIOLY_euclid &lt;dbl&gt;, LAS_euclid &lt;dbl&gt;, POLICJA_euclid &lt;dbl&gt;,
-## #   PRZEDSZKOLA_euclid &lt;dbl&gt;, RONDA_euclid &lt;dbl&gt;,
+##    Cn_m2_l   rok Pwrzchn Kndygnc APTEKI_euclid BIBLIOTEKI_MUZE~ BUD_PRZEM_euclid
+##      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;   &lt;int&gt;         &lt;dbl&gt;            &lt;dbl&gt;            &lt;dbl&gt;
+##  1   5115.  2009    39.1       1          431.            1155.            410. 
+##  2   7673.  2010    40.4       0         1369.             517.             90.1
+##  3   7399.  2014    44.6       3         1369.             517.             90.1
+##  4   6548.  2008    50.4       1         1369.             517.             90.1
+##  5   6587.  2008    50.1       3         1369.             517.             90.1
+##  6   6702.  2009    40.4       0         1369.             517.             90.1
+##  7   7500   2011    40         5         1369.             517.             90.1
+##  8   7639.  2009    44.6       3         1369.             517.             90.1
+##  9   5720.  2013    50.7       0         1395.             544.             85.4
+## 10   6420   2009    50.4       2         1395.             544.             85.4
+## # ... with 998 more rows, and 14 more variables: CENTRA_HANDLOWE_euclid &lt;dbl&gt;,
+## #   CMENTARZE_euclid &lt;dbl&gt;, DROGI_GLOWNE_euclid &lt;dbl&gt;, JEZIORA_euclid &lt;dbl&gt;,
+## #   KOMINY_euclid &lt;dbl&gt;, KOSCIOLY_euclid &lt;dbl&gt;, LAS_euclid &lt;dbl&gt;,
+## #   POLICJA_euclid &lt;dbl&gt;, PRZEDSZKOLA_euclid &lt;dbl&gt;, RONDA_euclid &lt;dbl&gt;,
 ## #   SZKOLA_PODSTAWOWA_euclid &lt;dbl&gt;, SZKOLA_PONADPODSTAWOWA_euclid &lt;dbl&gt;,
 ## #   WARTA_euclid &lt;dbl&gt;, geometry &lt;POINT [m]&gt;</code></pre>
 </div>
