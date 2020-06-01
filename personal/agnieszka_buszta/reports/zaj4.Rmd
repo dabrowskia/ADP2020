@@ -1,0 +1,57 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(raster)
+library(ggplot2)
+```
+
+
+```{r cars}
+DEM.pol<-getData('alt', country='POL', mask=TRUE)
+plot(DEM.pol)
+```
+
+wysokosc maks:
+
+```{r}
+max.dem <- max(DEM.pol[],na.rm = TRUE)
+max.dem
+```
+
+wysokosc min:
+
+```{r}
+min.dem <- min(DEM.pol[],na.rm = TRUE)
+min.dem
+```
+
+reklasyfikacja:
+
+```{r}
+rec.mat  <- matrix(c(0,max.dem,0
+                   -12, 0 , 1 ),
+                  ncol = 3, byrow = TRUE)
+DEM.pol.reclass <- reclassify(x = DEM.pol,
+                              rcl = rec.mat)
+plot(DEM.pol.reclass)
+```
+
+odległosc:
+
+```{r}
+#DEM.pol.aggr <- raster::aggregate(x= #DEM.pol, fact = 2, fun = max)
+#DEM.pol.aggr
+#DEM.pol
+#punkt <- st_point(c(4, 46))
+#punkt2 <- st_point(c(6, 48))
+#all <- st_sfc(punkt, punkt2)
+#all <- st_sf(all, crs = crs = #str_crs(DEM.pol))
+#raster::extract(DEM.pol, all)
+```
