@@ -1,0 +1,302 @@
+---
+title: "Projekt"
+author: Sara Wozniak, Justyna Glanowska
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE}
+library(spData)
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(plotly)
+library(corrplot)
+library(viridis)
+```
+
+
+```{r powiaty, echo = FALSE}
+powiaty<- st_read(dsn = 'j:/Documents/ADP2020/personal/sarawozniak/data/Powiaty.shp')
+
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+```
+
+
+```{r wynagrodzenia, echo=FALSE}
+wynagrodzenia <- readxl::read_xlsx('J:/Documents/ADP2020/personal/sarawozniak/data/Przecietne_wynagrodzenia_miesieczne.xlsx')
+
+ludnosc <- readxl::read_xlsx('J:/Documents/ADP2020/personal/sarawozniak/data/LUDNOSC_PLEC.xlsx')
+
+biblioteki <- readxl::read_xlsx('J:/Documents/ADP2020/personal/sarawozniak/data/Biblioteki.xlsx')
+
+dane <- powiaty %>%
+  left_join(wynagrodzenia, by = c('JPT_KOD_JE' = 'Kod')) %>%
+  left_join(ludnosc %>%
+              select(Kod, Ludnosc), by = c('JPT_KOD_JE' = 'Kod')) %>%
+  left_join(biblioteki%>%
+              select(Kod, czytelnicy), by = c('JPT_KOD_JE' = 'Kod'))
+
+
+dane <- dane %>%
+  mutate(wsp_czytelnikow = czytelnicy*1000/Ludnosc)
+dane <- dane %>%
+  mutate(wsp_bibliotek = biblioteki$biblioteki*1000/Ludnosc)
+
+```
+
+```{r absolwenci, echo = FALSE}
+absolwenci <- readxl::read_xlsx('J:/Documents/ADP2020/personal/sarawozniak/data/Liczba_absolwentow_uczelni_wyzszych.xlsx') 
+```
+
+## Liczba obserwacji oraz zmienne
+
+```{r liczba_danych, echo = FALSE}
+nrow(dane)
+dane.df <- st_set_geometry(dane, NULL)
+names(dane.df)
+```
+
+## Wykres przeciętnego miesięcznego wynagrodzenia w Polsce. Dane za rok 2018. 
+Najwyższe przeciętne wynagrodzenie jest w powiecie Jastrzębie-Zdrój ( +68% średniego wynagrodzenia w Polsce), a najniższe w powiecie kępińskim ( -34,2% średniego wynagrodzenia w Polsce).
+
+
+```{r wykres1, echo = FALSE}
+p <- dane %>% 
+  ggplot(aes(fill=przecietne_wynagrodzenie_miesieczne, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Przeciętne wynagrodzenie miesięczne w 2018 roku w Polsce',
+       fill = 'Przeciętne wynagrodzenie brutto')  +
+  scale_fill_viridis(trans = "log", breaks = c(2000, 4000, 6000, 9000, 1000),
+                     name="Średnie wynagrodzenie")
+
+ggplotly(p,
+  tooltip = c("JPT_NAZWA_","przecietne_wynagrodzenie_miesieczne"))
+
+```
+
+```{r min_max_wynagrodzenia, echo = FALSE}
+max_wynagrodzenie <- wynagrodzenia %>%
+  select(Nazwa, przecietne_wynagrodzenie_miesieczne) %>%
+  filter(przecietne_wynagrodzenie_miesieczne==max(wynagrodzenia$przecietne_wynagrodzenie_miesieczne))
+max_wynagrodzenie
+min_wynagrodzenie <- wynagrodzenia %>%
+  select(Nazwa, przecietne_wynagrodzenie_miesieczne) %>%
+  filter(przecietne_wynagrodzenie_miesieczne==min(wynagrodzenia$przecietne_wynagrodzenie_miesieczne))
+min_wynagrodzenie
+```
+## Przeciętne miesięczne wynagrodzenie w relacji do średniej krajowej
+
+
+```{r wspolczynniki, echo = FALSE}
+max_wspolczynnik_wynagrodzenia <- wynagrodzenia %>%
+  select(Nazwa, przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej) %>%
+  filter(przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej==max(wynagrodzenia$przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej))
+max_wspolczynnik_wynagrodzenia
+min__wspolczynnik_wynagrodzenia <- wynagrodzenia %>%
+  select(Nazwa, przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej) %>%
+  filter(przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej==min(wynagrodzenia$przecietne_wynagrodzenie_miesieczne_w_relacji_do_sredniej_krajowej))
+min__wspolczynnik_wynagrodzenia
+
+```
+
+
+## Liczba czytelników w powiatach.
+
+```{r L_CZYT, echo = FALSE}
+p <- dane %>%
+  ggplot(aes(fill = czytelnicy, geometry=geometry)) +
+  geom_sf() +
+	labs(
+    title = "Liczba czytelników w powiatach"
+  ) +
+  scale_fill_viridis(trans = "log", breaks = c(3000, 4000, 5000, 70000, 10000, 15000, 20000, 100000, 200000, 300000),
+                     name="Liczba czytelników")
+
+ggplotly(p)
+```
+
+
+## Liczba osób z wyższym wykształceniem.
+
+```{r wyzsze_wyksztalcenie, echo = FALSE}
+p <- absolwenci %>% 
+  left_join(dane %>% select(-Nazwa), by = c('Kod'= 'JPT_KOD_JE')) %>% 
+  filter(!is.na(wyksztalcenie_wyzsze)) %>% 
+  ggplot(aes(fill=wyksztalcenie_wyzsze, geometry=geometry)) +
+  geom_sf() +
+	labs(
+    title = "Liczba osób z wyższym wykształceniem w powiatach"
+  ) +
+  scale_fill_viridis(trans = "log", breaks = c(100, 300, 500, 1000, 5000, 10000, 20000, 50000),
+                     name="Osoby z wyższym wykształceniem")+
+  theme(
+    text = element_text(color = "#22211d"),
+    plot.background = element_rect(fill = "#f5f5f2", color = NA),
+    panel.background = element_rect(fill = "#f5f5f2", color = NA),
+    legend.background = element_rect(fill = "#f5f5f2", color = NA),
+    plot.title = element_text(size= 15, hjust=0.01, color = "#4e4d47", margin = margin(b = -0.1, t = 0.4, l = 2, unit = "cm")),
+    legend.position = c(0.2, 0.09)
+  ) 
+
+ggplotly(p)
+```
+
+
+
+## Korelacja między przeciętnym wynagrodzeniem, liczbą ludności w powiecie i współczynnikiem czytelników w powiecie (liczba czytelników na 1000 mieszkańców)
+Przeciętne wynagrodzenie w dużym stopniu zależy od liczby ludności powiatu i w mniejszym stopniu od współczynnika czytelników.
+
+```{r korelacja, echo = FALSE}
+
+dane.df %>%
+  select(przecietne_wynagrodzenie_miesieczne, wsp_czytelnikow, Ludnosc) %>%
+  cor() %>%
+  corrplot()
+```
+
+
+## Rozkład liczby bibliotek
+
+
+```{r rozklad_bibliotek, echo = FALSE}
+biblioteki %>% 
+  ggplot(aes(x=biblioteki)) + 
+  geom_histogram(bins=20, fill='skyblue', color='#69b3a2') + 
+  scale_x_log10() +
+  xlab ('Biblioteki') 
+```
+
+
+## Rozkład liczby czytelników
+
+```{r rozklad_czytelnikow, ECHO = FALSE}
+biblioteki %>% 
+  ggplot(aes(x=czytelnicy)) + 
+  geom_histogram(bins=20, fill='green', color='#69b3a2') + 
+  scale_x_log10() +
+  xlab('Czytelnicy')
+```
+
+## Rozkład liczby osób z wykształceniem wyższym.
+
+
+```{r rozklad_absolwenci, echo = FALSE}
+absolwenci %>% 
+  ggplot(aes(x=wyksztalcenie_wyzsze)) + 
+  geom_histogram(bins=20, fill='red', color='#69b3a2') + 
+  scale_x_log10()
+```
+
+## Powiaty z największa liczbą bibliotek to miasto Warszawa, Łódź, powiat rzeszowski, poznański i krakowski.
+Natomiast największa liczba bibliotek na 1 000 mieszkańców przypada w powiatach grodziskim, namysłowskim, leskim, węgorzewskim i gołdapskim.
+```{r biblioteki_max, echo = FALSE}
+plot_df <- biblioteki %>% arrange(., desc(biblioteki)) %>% head(5)
+plot_df$Nazwa
+barplot(
+  height = plot_df$biblioteki,
+  names = plot_df$Nazwa,
+  cex.main = 1,
+  col = rgb(0, 0.0, 0.8, 1),
+  xlab = "powiaty",
+  ylab = "liczba bibliotek",
+  main = "Powiaty z największą liczbą bibliotek",
+  ylim = c(0, 250)
+)
+```
+
+
+## Powiaty z najmniejszą liczba bibliotek to miasto Piotrków Trybunalski, Chełm, Suwałki, Biała Podlaska i Skierniewice.
+
+```{r biblioteki_min, echo =FALSE}
+plot_df <- biblioteki %>% 
+  arrange(., biblioteki) %>% 
+  head(5)
+plot_df$Nazwa
+barplot(
+  height = plot_df$biblioteki,
+  names = plot_df$Nazwa,
+  cex.main = 1.5,
+  col = rgb(0, 0.0, 0.8, 1),
+  xlab = "powiaty",
+  ylab = "liczba bibliotek",
+  main = "Powiaty z najmniejszą liczbą bibliotek",
+  ylim = c(0, 7)
+)
+```
+
+## Powiaty z największą liczbą osób z wykształceniem wyższym to miasto Warszawa, Kraków, Wrocław, Poznań i Gdańsk.
+
+```{r powiaty_wyksztalcenie, echo=FALSE}
+plot_df <- absolwenci %>% 
+  arrange(., desc(wyksztalcenie_wyzsze)) %>% 
+  head(5)
+plot_df$Nazwa
+barplot(
+  height = plot_df$wyksztalcenie_wyzsze,
+  names = plot_df$Nazwa,
+  cex.main = 1.5,
+  col = rgb(0, 0.0, 0.8, 1),
+  xlab = "powiaty",
+  ylab = "liczba osób z wyższym wykształceniem",
+  main = "Powiaty z największą liczbą osób z wyższym wykształceniem",
+  ylim = c(0, 60000)
+)
+```
+
+Powiaty z najmniejsza liczba osob z wyksztalceniem wyzszym to gryficki, tatrzański, kościerski, przasnyski i pińczowski.
+
+```{r absolwenci_powiaty, echo= FALSE}
+plot_df <- absolwenci %>% 
+  arrange(., wyksztalcenie_wyzsze) %>% 
+  head(5)
+plot_df$Nazwa
+barplot(
+  height = plot_df$wyksztalcenie_wyzsze,
+  names = plot_df$Nazwa,
+  cex.main = 1.5,
+  col = rgb(0, 0.0, 0.8, 1),
+  xlab = "powiaty",
+  ylab = "liczba osób z wyższym wykształceniem",
+  main = "Powiaty z najmniejszą liczbą osób z wyższym wykształceniem",
+  ylim = c(0, 15)
+)
+```
+
+
+## Wyższe wykształcenie vs. przeciętne wynagrodzenie
+
+```{r wyk_wyn, echo= FALSE}
+
+plot_df <- biblioteki %>% 
+  left_join(., absolwenci %>% select(-Nazwa)) %>% 
+  left_join(., wynagrodzenia %>% select(-Nazwa)) %>% 
+  filter(!is.na(wyksztalcenie_wyzsze))
+
+p_corr2 <- ggplot(plot_df, 
+                  aes(x = wyksztalcenie_wyzsze, y = przecietne_wynagrodzenie_miesieczne)) +
+  geom_point() +
+  geom_smooth(method = lm , color = "red", fill = "#69b3a2", se = TRUE) 
+p_corr2
+```
+
+## Liczba bibliotek vs. osoby z wyższym wykształeniem
+```{r bib_wyk, echo= FALSE}
+plot_df <- biblioteki %>% 
+  select(Kod, Nazwa, biblioteki, czytelnicy) %>% 
+  left_join(., absolwenci %>% select(-Nazwa)) %>% 
+  filter(!is.na(wyksztalcenie_wyzsze))
+
+p_corr1 <- ggplot(plot_df, 
+             aes(x= biblioteki, y = wyksztalcenie_wyzsze)) +
+  geom_point() +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE)
+p_corr1
+```
+
+
+
+
