@@ -1,0 +1,108 @@
+---
+title: "Projekt zaliczeniowy"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(spData)
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(plotly)
+library(corrplot)
+library(viridis)
+library(raster)
+
+library(tmap)
+
+```
+
+## Projekt zaliczniowy
+
+
+```{r cars}
+powiaty<- st_read(dsn = 'j:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/Powiaty.shp')
+
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+
+wojewodztwa <- st_read(dsn = 'j:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/Województwa.shp')
+
+wojewodztwa$JPT_KOD_JE <-paste0(wojewodztwa$JPT_KOD_JE, '00000')
+
+wynagrodzeniewojewodztwa <- readxl::read_xlsx('J:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/wynagrodzeniewojewodztwa.xlsx')
+
+
+wynagrodzenia <- readxl::read_xlsx('J:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/wynagrodzenie.xlsx')
+```
+
+
+
+```{r pressure, echo=FALSE}
+dane <- powiaty %>%
+  left_join(wynagrodzenia, by = c('JPT_KOD_JE' = 'Kod')) 
+
+
+dane %>%
+  ggplot(aes(fill=`2003`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie przed wejściem Polski do UE')
+
+dane %>%
+  ggplot(aes(fill=`2004`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie na przełomie wejścia Polski do UE')
+
+dane %>%
+  ggplot(aes(fill=`2005`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie po wejściu Polski do UE')
+
+```
+
+
+
+```{r pressure, echo=FALSE}
+daneWojewodztwa <- wojewodztwa %>%
+  left_join(wynagrodzenia, by = c('JPT_KOD_JE' = 'Kod')) 
+
+map1 <- daneWojewodztwa %>%
+  ggplot(aes(fill=`rok2003`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie 2003 przedstwaione na mapie wojewodztw')
+
+map2 <- daneWojewodztwa %>%
+  ggplot(aes(fill=`rok2004`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie 2004 przedstwaione na mapie wojewodztw')
+
+map3 <- daneWojewodztwa %>%
+  ggplot(aes(fill=`rok2005`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie 2005 przedstwaione na mapie wojewodztw')
+
+
+
+```
+
+## Podsumowanie wynagrodzenie w województwach
+
+
+```{r pressure, echo=FALSE}
+Dane <-summary(wynagrodzeniewojewodztwa)
+Dane
+```
+
+
+
+```{r pressure, echo=FALSE}
+wykres1 <- ggplot(wynagrodzeniewojewodztwa, aes(x = rok2003, y=Nazwa)) +
+  geom_point() 
+
+wykres2 <- ggplot(wynagrodzeniewojewodztwa, aes(x = rok2004, y=Nazwa)) +
+  geom_point() 
+
+wykres3 <- ggplot(wynagrodzeniewojewodztwa, aes(x = rok2005, y=Nazwa)) +
+  geom_point() 
+```
+
