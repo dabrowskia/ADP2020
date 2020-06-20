@@ -1,0 +1,91 @@
+---
+title: "Nieruchomości"
+author: "Dominika Wojciechowska"
+date: "30 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE, warning=FALSE)
+```
+
+# Modelowanie cen nieruchomości
+
+## Przygotowanie danych i eksploracja
+
+```{r}
+library("spData")
+library("ggplot2")
+library("dplyr")
+library("sf")
+library("raster")
+library("caret")
+library("corrplot")
+```
+
+```{r}
+load("../../../data/ratajeNieruchomosci2.Rdata")
+
+plot(rataje)
+
+class(wtorne.rataje)
+
+# cor.test(wtorne.rataje$APTEKI_euclid,wtorne.rataje$BIBLIOTEKI_MUZEA_euclid)
+
+wtorne.rataje.df <- st_set_geometry(wtorne.rataje, NULL) # ustawienie geometrii na NULL
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok) # zmiana zmiennej rok z typu int na kategorię factor
+
+names(wtorne.rataje.df)
+str(wtorne.rataje.df)
+
+summary(wtorne.rataje.df)
+
+
+wtorne.rataje.df %>% 
+  dplyr::select(-rok) %>% 
+  cor() %>% 
+  corrplot()
+
+
+```
+
+## Model
+
+
+```{r}
+
+cvCtrl <- trainControl(method = "repeatedcv", 
+                       number = 10, 
+                       repeats = 2) #kroswalidacja
+
+linearModel <- train(data = wtorne.rataje.df,
+                     Cn_m2_l~. , #modeluję cenę za pomocą wszystkich zmiennych (wskazuje na to kropka)
+                     method = "lm", metric = "RMSE", 
+                     tuneLength = 5, trControl = cvCtrl)
+
+
+# linearModel <- train(wtorne.rataje.df[,-1], wtorne.rataje.df$Cn_m_2_l,
+#                      method = "lm", metric = "RMSE", 
+#                      tuneLength = 5, trControl = cvCtrl) # 2 sposób
+
+
+summary(linearModel)
+
+pred.params <- data.frame(rok = factor('2011'),
+                          Pwrzchn = 60, 
+                          Kndygnc = 1)
+
+prognoza.rataje <- raster::predict(rataje.rastry, 
+                                   linearModel, 
+                                   const = pred.params)
+
+plot(prognoza.rataje)
+
+
+```
+
+
+
+
+
+
