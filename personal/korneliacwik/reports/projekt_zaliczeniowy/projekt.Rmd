@@ -1,0 +1,154 @@
+---
+title: "Analiza rynku nieruchomości w 2018 roku"
+author: "Kornelia Ćwik, Adam Rubczyński"
+date: "11 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(sf)
+library(readxl)
+library(spData)
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(maps)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## Wstęp
+Analiza rynku nieruchomości została przygotowana w oparciu o dane z Banku Danych Lokalnych GUSu. Wykorzystane zostały dane z 2018 roku na temat rynkowej sprzedaży lokali mieszkalnych, stopy bezrobocia rejestrowanego oraz dochodów powiatów w przeliczeniu na 1 mieszkańca. <br>
+W raporcie posługiwaliśmy się wartością bezwzględną sprzedanych mieszkań, ale również wartością przeliczoną na 1000 mieszkańców. W celu jej obliczenia wykorzystaliśmy dane o ludności z Narodowego Spisu Powszechnego z 2011 roku. Dane GUSu o dochodach w przeliczeniu na 1 mieszkańca również zostały stworzone w oparciu o ten spis.
+
+
+## Przygotowanie danych
+```{r}
+powiaty <- st_read(dsn = 'dane/jednostki_administracyjne/Powiaty.shp')
+
+nieruchomosci <- readxl::read_xlsx('dane/rynek_nieruchomosci.xlsx', sheet = 2)
+bezrobocie <- readxl::read_xlsx('dane/bezrobocie_rejestrowane.xlsx', sheet = 2)
+dochody <- readxl::read_xlsx('dane/dochody_na_mieszkanca.xlsx', sheet = 2)
+spis <- readxl::read_xlsx('dane/spis_powszechny_2011.xlsx', sheet = 2)
+
+colnames(bezrobocie)[1] <- 'JPT_KOD_JE'
+colnames(nieruchomosci)[1] <- 'JPT_KOD_JE'
+colnames(dochody)[1] <- 'JPT_KOD_JE'
+colnames(spis)[1] <- 'JPT_KOD_JE'
+
+
+powiaty$JPT_KOD_JE <- paste0(powiaty$JPT_KOD_JE, '000')
+
+df <- powiaty %>%
+  left_join(bezrobocie, by = c(('JPT_KOD_JE')))
+
+df <- df %>%
+  left_join(dochody, by = c(('JPT_KOD_JE')))
+
+df <- df %>%
+  left_join(nieruchomosci, by = c(('JPT_KOD_JE')))
+
+df <- df %>%
+  left_join(spis, by = c(('JPT_KOD_JE')))
+
+df %>%
+  mutate(Lokale_na_1000_mieszk = (Lokale/Ludność)*1000) -> df
+
+df %>%
+  mutate(Lokale_pierwotny_procent = Lokale_pierwotny/Lokale*100) -> df
+```
+
+## Podział na rynek pierwotny i wtórny
+Na poniższym wykresie przedstawiono udział mieszkań z rynku pierwotnego we wszystkich transakcjach sprzedaży.
+```{r}
+ggplot(data = df) +
+  geom_sf(data = df, aes(fill = Lokale_pierwotny_procent)) +
+  geom_point(data = world.cities[world.cities$country.etc == 'Poland' & world.cities$pop >= 150000,],
+             aes(x=long, y=lat)) +
+  geom_text(data = world.cities[world.cities$country.etc == 'Poland' & world.cities$pop >= 150000,],
+             aes(x=long, y=lat, label = name),size = 3, nudge_y = -0.1) +
+  labs(title = 'Lokale z rynku pierwotnego wśród wszystkich sprzedanych lokali (%)') +
+  scale_fill_gradient2(mid = 'lightblue', high = 'darkblue')
+  
+```
+
+Widać, że duży odsetek mieszkań z rynku pierwotnego występuje w powiatach sąsiadujących z największymi polskimi miastami, między innymi Warszawą, Poznaniem czy Krakowem. <br> <br>
+
+Powiaty, w których mieszkania z rynku pierwotnego stanowią największą część sprzedanych mieszkań:
+```{r}
+
+
+df %>%
+  st_set_geometry(NULL) %>%
+  arrange(by = desc(Lokale_pierwotny_procent)) %>%
+  top_n(10) %>%
+  select(JPT_NAZWA_, Lokale_pierwotny_procent, Lokale_pierwotny)
+```
+
+## Kartogramy 
+```{r}
+ggplot(data = df, aes(fill = Stopa_bezrobocia)) +
+  geom_sf() +
+  labs(title = 'Stopa bezrobocia rejestrowanego') + 
+  scale_fill_gradient2(mid = 'lightblue', high = 'darkblue')
+
+ggplot(data = df, aes(fill = Dochód_na_mieszkanca)) +
+  geom_sf() +
+  labs(title = 'Dochód powiatu w przeliczeniu na 1 mieszkańca') + 
+  scale_fill_gradient2(mid = 'lightblue', high = 'darkblue')
+
+
+ggplot(data = df, aes(fill = Lokale_na_1000_mieszk)) +
+  geom_sf() +
+  labs(title = 'Liczba sprzedanych lokali mieszkalnych na 1000 mieszkańców') + 
+  scale_fill_gradient2(mid = 'lightblue', high = 'darkblue')
+
+ggplot(data = df, aes(fill = Lokale)) +
+  geom_sf() +
+  labs(title = 'Liczba sprzedanych lokali mieszkalnych') + 
+  scale_fill_gradient2(mid = 'lightblue', high = 'darkblue')
+```
+
+## Sprzedaż lokali mieszkalnych a liczba ludności
+```{r}
+ggplot(df,aes(x = Lokale, y= Ludność)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między liczbą ludności a liczbą sprzedanych lokali", x= "liczba sprzedanych lokali", y = "Liczba ludności")
+cor.test(df$Lokale, df$Ludność)
+
+
+```
+W celu zbadania korelacji pomiędzy liczbą lokali sprzedanych, a liczbą ludności danego powiatu posłużylismy się wskaźnikiem korelacji Pearsona oraz wykresem. Jak widzimy wartość współczynnika wynosi 0,93, co oznacza bardzo silną korelacji. Jest to wartość zbliżona do 1, która oznacza całkowitą zależność. Wartość p-value jest zdecydowanie mniejsza od 0.05 więc wynik jest istotny i możemy odrzucić hipotezę zerową mówiącą o tym, że korelacja między tymi dwoma zmiennymi jest równa 0. 
+```{r}
+df%>%as.data.frame%>%top_n(1,Ludność)%>%select(JPT_NAZWA_,Ludność,Lokale)
+```
+Widzimy, że powiatem ze zdecydowanie największą ilością mieszkańców oraz sprzedanych lokali jest powiat miasta Warszawa.
+
+## Sprzedaż lokali mieszkalnych a dochody powiatu
+```{r}
+ggplot(df,aes(x = Lokale_na_1000_mieszk, y= Dochód_na_mieszkanca)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między dochodami mieszkańców a liczbą sprzedanych lokali na 1000 osób", x= "liczba sprzedanych lokali na 1000 osób", y = "dochód na mieszkańca")
+
+cor.test(df$Lokale_na_1000_mieszk, df$Dochód_na_mieszkanca)
+
+
+```
+Powyżej sprawdziliśmy, czy istnieje korelacja pomiędzy lokalami sprzedanymi na 1000 mieszkańców, a dochodami na mieszkańca w danym powiecie. Wykres jednoznacznie wskazuje nam, że nie możemy doszukiwać się tutaj żadnej korelacji pomiędzy tymi zmiennymi. Potwierdza to wskaźnik korelacji Pearsona na poziomie 0,07.
+
+## Sprzedaż lokali mieszkalnych a stopa bezrobocia
+```{r}
+ggplot(df,aes(x = Lokale_na_1000_mieszk, y= Stopa_bezrobocia)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między stopą bezrobocia a liczbą sprzedanych lokali na 1000 osób", x= "liczba sprzedanych lokali na 1000 osób", y = "stopa bezrobocia")
+
+cor.test(df$Lokale_na_1000_mieszk, df$Stopa_bezrobocia)
+
+```
+Podobną analizę dokonaliśmy, próbując odpowiedzieć na pytanie, czy istnieje korelacja pomiędzy ilością sprzedanych lokali na 1000 mieszkańców, a stopą bezrobocia w danym powiecie. Tym razem wartość współczynnika Pearsona wyniosła -0,29 co świadczy o umiarkowanej korelacji. Korelacja jest jednak ujemna, tzn., im mniejsza stopa bezrobocia tym większa sprzedaż. Jest to całkiem logiczny wniosek. P-value potwierdza nas w przekonaniu o istotności wyniku.
+
+
+
+
+
+
