@@ -1,0 +1,91 @@
+---
+title: "cw2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(dplyr)
+library(ggplot2)
+```
+
+# Zadanie 1
+## Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+```{r}
+world %>%
+  filter(continent == "Europe") %>%
+  select(pop) %>%
+  plot()
+
+
+world %>%
+  filter(continent == "Europe") %>%
+  select(pop) -> europe_pop
+
+plot(europe_pop)
+```
+
+# Zadanie 2
+## Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r}
+world %>%
+  arrange(pop) %>%
+  select(name_long,pop) %>%
+  top_n(-10,wt=pop)
+```
+
+# Zadanie 3
+## Ile krajów znajduje się w Azji?
+
+```{r}
+world %>%
+  filter(continent == "Asia") %>%
+  count() 
+```
+
+# Zadanie 4
+## Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+
+```{r}
+world %>%
+  filter(type == "Sovereign country") %>%
+  ggplot(aes(area_km2)) +
+  geom_histogram(bins = 150)
+```
+
+# Zadanie 5
+## Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+
+```{r}
+world %>%
+  ggplot(aes(x = lifeExp, y = gdpPercap)) +
+  geom_smooth()
+```
+
+## setup rastrów
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+new_raster
+#new_raster[]
+plot(new_raster)
+```
+
+# Zadanie 6
+## Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+```{r}
+max(new_raster[], na.rm = TRUE)
+```
+
+# Zadanie 7
+## Jaki jest rozkład wartości obrazu rastrowego?
+```{r}
+hist(new_raster, maxpixels=250000)
+```
+
+

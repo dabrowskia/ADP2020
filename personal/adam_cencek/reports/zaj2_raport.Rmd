@@ -1,0 +1,84 @@
+---
+title: "Untitled"
+author: "Adam Cencek"
+date: "4/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(dplyr)
+library(ggplot2)
+```
+
+# 1. Wyświetlcie mapę krajów Europejskich wg liczby ludności.
+
+```{r}
+world %>%
+  filter(continent == "Europe") %>%
+  dplyr::select(pop) %>%
+  ggplot(aes(fill=pop)) +
+    geom_sf()
+```
+
+
+
+# 2. Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+
+Najmniejszą liczbę ludności ma Grenlandia.
+
+```{r}
+world %>%
+  arrange(pop) %>%
+  dplyr::select(name_long,pop) %>%
+  top_n(-1,wt=pop)
+```
+
+# 3. Ile krajów znajduje się w Azji?
+
+```{r}
+world %>%
+  filter(continent == "Asia") %>%
+  count() 
+```
+
+
+# 4. Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country).
+
+```{r}
+world %>% 
+  filter(type == 'Sovereign country') %>% 
+  ggplot(aes(x = area_km2)) + 
+  geom_histogram(bins = 30)
+```
+
+# 5. Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
+
+```{r}
+world %>% 
+  ggplot(aes(x = lifeExp, y = gdpPercap)) + 
+  geom_point()
+```
+
+
+# 6. Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+max(values(new_raster))
+```
+
+---
+# 7. Jaki jest rozkład wartości obrazu rastrowego?
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+hist(new_raster, maxpixels=250000, main = "Rozkład")
+```

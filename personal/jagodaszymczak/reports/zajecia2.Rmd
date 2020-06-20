@@ -1,0 +1,94 @@
+---
+title: "Zajecia2"
+author: "jagodaszymczak"
+date: "4 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(dplyr)
+library(ggplot2)
+```
+
+## Zadanie 1
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r}
+europe <- world[world$continent=='Europe','pop']
+plot(europe)
+```
+---
+
+## Zadanie 2
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+
+```{r}
+najmniejszy <- world %>% select(name_long, pop) %>%
+  arrange(pop)
+slice(najmniejszy,1)
+```
+---
+
+## Zadanie 3
+
+Ile krajów znajduje się w Azji?
+
+```{r}
+world %>%
+  filter(continent == "Asia")%>%
+  nrow()
+```
+---
+
+## Zadanie 4
+
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+```{r}
+his <- world %>%
+  filter(type == "Sovereign country")
+ggplot(his, aes(x = area_km2)) +
+  geom_histogram()+
+  labs(x = "powierzchnia", y = "liczebność")
+  
+```
+---
+
+## Zadanie 5
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+```{r}
+ggplot(world, aes(x = lifeExp, y = gdpPercap)) +
+  geom_point()
+```
+---
+
+## Zadanie 1 Slajd 16
+
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+plot(new_raster)
+
+```
+
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+max(values(new_raster))
+```
+
+---
+## Zadanie 2
+Jaki jest rozkład wartości obrazu rastrowego?
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+hist(new_raster, maxpixels=212505, main = "Rozkład wartości obrazu")

@@ -8,23 +8,69 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
 ```{r}
 library(corrplot)
 library(sf)
 library(dplyr)
+
+library(ggplot2)
+library(caret)
+library(sp)
 load("../data/ratajeNieruchomosci2.Rdata")
 ```
 
+## Nazwy zmiennych i statystyki
 ```{r}
 wtorne.rataje.df <- st_set_geometry(wtorne.rataje, NULL)
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+names(wtorne.rataje)
+summary(wtorne.rataje.df)
+```
+## Wykres korelacji zmiennych
+```{r}
+
 wtorne.rataje.df %>%
   select(-rok) %>%
   cor() %>%
   corrplot()
+
+
 ```
 
+## Mapa dzielnicy Rataje
+
 ```{r}
-names(wtorne.rataje)
-summary(wtorne.rataje.df)
+rataje %>% 
+  ggplot(aes(geometry=geometry)) +
+  geom_sf()
+
+```
+
+## Statystyki modelu liniowego
+```{r}
+
+cvCtrl <- trainControl(method = "repeatedcv", number = 10, repeats = 2)
+
+linearModel <- train(wtorne.rataje.df[,-1],
+                     wtorne.rataje.df[,1], method = "lm",
+                     metric = "RMSE", tuneLength = 6,
+                     trControl = cvCtrl)
+
+summary(linearModel)
+
+```
+### Dla parametru tuneLength o wartości 6 i 7 otrzymujemy taką samą wartość Adjusted R-squared.
+
+## Predykcja
+```{r}
+pred.param <- data.frame(rok = factor(2011),
+                         Pwrzchn = 60,
+                         Kndygnc = 1)
+prognoza.rataje <- raster::predict(rataje.rastry, 
+                                    linearModel,
+                                    const = pred.param)
+
+sp::plot(prognoza.rataje)
 ```
 

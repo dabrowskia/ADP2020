@@ -1,0 +1,77 @@
+---
+title: "Analiza danych GUS - grid"
+author: "Krzysztof Wołowiec"
+date: "3 05 2020"
+output: github_document
+---
+
+```{r warning=FALSE, message=FALSE}
+library(tidyverse)
+library(sf)
+library(xlsx)
+```
+
+# 1. IMPORT DANYCH
+
+### 1.1 Wczytanie danych liczbowych z pliku `.xls`
+
+```{r}
+df <- read.xlsx('../data/gus-data/dane_siatka_miasta_zalacznik_nr_3.xls', sheetIndex = 1)
+head(df)
+```
+
+```{r}
+str(df)
+```
+
+Dane obejmują wskaźniki społeczno-gospodarcze dla segmentów siatki wybranych miast Polski. Zmienne można podzielić na 3 grupy:
+
+* wskaźniki demograficzne, m.in.: udział różnych grup wiekowych w populacji, współczynnik feminizacji, mediana wieku, w. wsparcia osób najstarszycg, indeks starości),
+
+* wskaźniki związane z zatrudnieniem: udział pracujących, m.in.: udział emerytór i rencistów, u. pracujących w wieku poprodukcyjnym, u. bezrobotnych
+
+* kategorie na podstawie statystyk korelacji przestrzennej Morana.
+
+```{r}
+summary(df)
+```
+
+
+
+### 1.2. Wczytanie warstwy wektorowej z pliku `shp`
+
+```{r}
+grid <- read_sf('../data/gus-data/siatka_miasta załącznik nr 1.shp')
+str(grid)
+```
+
+
+# 2. INTEGRACJA DANYCH
+
+Identyfikacja kodu dla Poznania, filtrowanie danych.
+
+```{r}
+code.pz <- 'PL005C'
+grid.pz <- grid %>% filter(Nr_LUZu == code.pz)
+df.pz <- df %>% filter(KOD_MIASTA == code.pz )
+```
+
+Przyłączenie danych numerycznych do siatki kwadratów
+
+```{r}
+grid.feats.pz <- left_join(x = grid.pz, 
+                           y = df.pz, 
+                           by = c('ID_GRID500' = 'ID_GRID'))
+```
+
+# 3. WIZUALIZACJA
+
+```{r fig.width=10}
+ggplot() +
+  geom_sf(data=grid.feats.pz, aes(fill=U_L_00_14)) +
+  labs(title = "Udział ludności w wieku 0-14 lat w liczbie ludności ogółem",
+      caption = 'Źródło: NSP 2011',
+      fill = 'W %:') +
+  theme_void()
+```
+

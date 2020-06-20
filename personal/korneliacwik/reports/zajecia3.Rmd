@@ -1,0 +1,87 @@
+---
+title: "Zajęcia 3"
+author: "Kornelia Ćwik"
+date: "25 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(readxl)
+library(spData)
+library(ggplot2)
+library(dplyr)
+```
+
+## Zad. 1
+
+Utworzenie punktu znajdującego się na terenie Polski.
+
+```{r zad1}
+lnd_point = st_point(c(16.56, 52.24))           #poznań      
+# sfg object
+lnd_geom = st_sfc(lnd_point, crs = 4326)  
+
+ggplot()+
+  geom_sf(data=world)+
+  geom_sf(data = lnd_geom, color = 'red') +
+  theme_light()
+
+```
+
+## Zad. 2
+
+```{r zad2}
+polygon_border <- list(rbind(c(14.07,49), c(14.07,55), c(24.09,55), c(24.09,49),c(14.07,49)))
+my_polygon <- st_polygon(polygon_border)
+my_polygon <- st_sfc(my_polygon,crs = 4326)
+
+linestring_matrix = rbind(c(20, 55), c(19, 54.5), c(18, 54), c(19, 53.3), c(20, 52.7),
+                          c(21, 52), c(21, 51.6), c(20, 51.1), c(19, 50), c(18.5, 49))
+line <- st_linestring(linestring_matrix)
+my_line <- st_sfc(line, crs = 4326)
+
+
+ggplot()+
+  geom_sf(data = my_polygon, color = 'red', fill = NA) +
+  geom_sf(data = my_line, color = 'blue') +
+  geom_sf(data=world %>% filter(name_long == 'Poland'), fill = NA) +
+  theme_light()
+```
+<br>
+49°00′ szer. geogr. N – szczyt Opołonek <br>
+54°50′ szer. geogr. N – Jastrzębia Góra[g] w gminie Władysławowo <br>
+14°07′ dług. geogr. E – zakole Odry koło Osinowa Dolnego <br>
+24°09′ dług. geogr. E – zakole Bugu koło Zosina. <br> <br>
+
+Jaką powierzchnię ma Polska?
+```{r}
+world %>%
+  filter(name_long == 'Poland') %>%
+  select(area_km2) %>%
+  st_set_geometry(NULL) %>%
+  as.numeric()
+```
+
+## Zad. 3
+
+Złączenie danych z GUSu
+
+```{r}
+powiaty <- st_read(dsn = '../data/jednostki_administracyjne/Powiaty.shp')
+```
+
+```{r}
+przyrost <- readxl::read_xlsx('../data/przyrost.xlsx', sheet = 2)
+
+powiaty$JPT_KOD_JE <- paste0(powiaty$JPT_KOD_JE, '000')
+
+df <- powiaty %>%
+  left_join(przyrost, by = c(('JPT_KOD_JE')))
+
+ggplot(data = df, aes(fill = przyrost_naturalny)) +
+  geom_sf() +
+  labs(title = 'Przyrost naturalny na 1000 ludności') + 
+  scale_fill_gradient2(low = 'red', high = 'green')
+```

@@ -1,0 +1,103 @@
+---
+title: "zaj2"
+author: "Agnieszka Buszta"
+date: "5 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+## install.packages("rgdal")
+library(sf)
+library(raster)
+library(dplyr)
+library(ggplot2)
+library(spData)
+library(spDataLarge)
+library(devtools)
+library(fs)
+library(rgdal)
+```
+
+## ctr+shift+k - kompilacja/wywołanie
+
+## Zadanie 1
+Wyświetlcie mapę krajów Europejskich wg liczby ludności
+
+```{r}
+plot(world[world$continent == 'Europe','pop'])
+```
+
+## Zadanie 2
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r}
+world %>%
+  filter(pop == min(world$pop, na.rm=TRUE)) %>%
+  select(c(pop, name_long)) %>%
+  print()
+```
+
+## Zadanie 3
+Ile krajów znajduje się w Azji?
+
+```{r}
+world %>%
+  filter(continent == 'Asia') %>%
+  summarise(n())
+```
+
+## Zadanie 4
+Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country).
+
+```{r}
+world %>%
+  filter(type == 'Sovereign country') %>%
+  ggplot(aes(x = pop)) +
+  geom_histogram(bins = 30)
+```
+
+## Zadanie 5
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap.
+
+```{r}
+world %>%
+  ggplot(aes(x = lifeExp, y = gdpPercap)) +
+  geom_point()
+```
+
+## Zadanie 6
+# Dane Rastrowe
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+new_raster
+# new_raster[] <- shows the matrix
+plot(new_raster)
+```
+
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+```{r}
+max(new_raster[], na.rm = TRUE)
+```
+
+##  Zadanie 7
+Jaki jest rozkład wartości obrazu rastrowego
+```{r}
+hist(new_raster, maxpixels=250000)
+
+
+## R Markdown
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

@@ -1,0 +1,78 @@
+---
+title: "nieruchomosciRataje"
+author: "Magdalena Grzegorzewska"
+date: "9 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(caret)
+library(corrplot)
+library(ggplot2)
+library(sf)
+library(raster)
+```
+
+## Nieruchomosci rataje
+
+
+```{r pressure, echo=FALSE}
+load("ratajeNieruchomosci2.Rdata")
+
+summary(wtorne.rataje)
+glimpse(wtorne.rataje)
+View(rataje)
+plot(rataje)
+```
+
+## Wczytanie danych i ich eksploracja
+
+```{r}
+load("ratajeNieruchomosci2.Rdata")
+
+wtorne.rataje.df <- st_set_geometry(wtorne.rataje, NULL)
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+
+cvCtr <- trainControl(method = "repeatedcv",
+                      number = 10,
+                      repeats = 2)
+
+linearModel <- train(wtorne.rataje.df,
+                     wtorne.rataje.df$Cn_m2_l,
+                     method = "glm", metric = "RMSE",
+                     tuneLength = 5, trControl = cvCtr)
+
+linearModel <- train(data = wtorne.rataje.df,
+                     Cn_m2_l~ .,
+                     method = "lm", metric = "RMSE",
+                     tuneLength = 5, trControl = cvCtr)
+
+summary(linearModel)
+
+```
+
+## Poligon zawierający granice osiedla
+
+```{r}
+rataje %>% 
+  ggplot(aes(geometry=geometry)) +
+  geom_sf()
+```
+
+## Predykcja/model ceny metra kwadratowego nieruchomości z rynku wtórnego w obszarze osiedla Rataje 
+
+modelowanie tych cen oraz wizualizację predykcji cen metra kwadratowego nieruchomości dla mieszkania o wybranych przez Was parametrach (rok sprzedaży, kondygnacja i powierzchnia).
+
+```{r}
+pred.params <- data.frame(rok = factor(2013),
+                        Pwrzchn = 8,
+                        Kndygnc = 4)
+
+prognoza.rataje <- raster::predict(rataje.rastry,
+                                   linearModel,
+                                   const = pred.params)
+
+plot(prognoza.rataje)
+```

@@ -1,0 +1,27 @@
+---
+title: "Untitled"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## GitHub maksim
+
+```{r cars}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+maxim <- max(new_raster[ ])
+
+maxim
+```
+
+## Including Plots
+
+```{r pressure, echo=FALSE}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+hist(new_raster)
+```
+

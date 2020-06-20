@@ -1,0 +1,108 @@
+---
+title: "zajecia 2"
+author: "M grzegorzewska"
+date: "4 04 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(devtools)
+library(fs)
+library(raster)
+library(spData)
+library(sf)
+library(dplyr)
+library(ggplot2)
+library(raster)
+library(rgdal)
+```
+
+## Zadnaie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r zad 1}
+plot(world[world$continent == "Europe","pop"])
+
+```
+
+## Zadnaie 2
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+```{r zad 2}
+minimalna <- min(world$pop, na.rm = TRUE)
+world[world$pop == minimalna,c("name_long","pop")]
+
+```
+
+## Zadnaie 3
+
+Ile krajów znajduje się w Azji?
+
+```{r zad 3}
+world_mini <- world[world$continent == "Asia","name_long"]
+nrow(world_mini)
+
+
+```
+
+
+## Zadnaie 4
+
+Wyświetlcie histogram powierzchni wszystkich niezależnych krajów (Sovereign Country)
+
+```{r zad 4}
+worldSloverign <- world %>%
+  filter(type == "Sovereign country")%>%
+    mutate(area_km2_mutate = area_km2 / 10000)
+
+ggplot(worldSloverign, aes(x = area_km2_mutate)) +
+  geom_histogram(bins=50)
+
+```
+
+
+## Zadnaie 5
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+
+```{r zad 5}
+ggplot(world, aes(x = lifeExp, y = gdpPercap)) +
+  geom_point()
+```
+
+```{r}
+world %>%
+  ggplot(aes(x = lifeExp, y = gdpPercap)) +
+  geom_point()
+```
+
+ 
+
+## Zadanie 6
+# Dane Rastrowe
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+new_raster
+# new_raster[] <- shows the matrix
+plot(new_raster)
+```
+
+ 
+
+Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+```{r}
+max(new_raster[], na.rm = TRUE)
+```
+
+ 
+
+##  Zadanie 7
+Jaki jest rozkład wartości obrazu rastrowego
+```{r}
+#hist(new_raster, maxpixels=250000)
+```
+

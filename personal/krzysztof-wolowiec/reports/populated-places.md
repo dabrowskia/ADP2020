@@ -1,0 +1,45 @@
+Populated places
+================
+Krzysztof Wołowiec
+3 05 2020
+
+``` r
+library(sf)
+library(spData)
+library(magrittr)
+library(ggplot2)
+library(dplyr)
+```
+
+# Populated places
+
+``` r
+populated_places <- read_sf('../data/ne_10m_populated_places/ne_10m_populated_places_simple.shp')
+```
+
+### Przykładowa wizualizacja:
+
+``` r
+top_n <- populated_places %>%
+top_n( n = 15, wt = pop_max) %>%
+  select(name, pop_max)
+
+ggplot(top_n) +
+    geom_sf(data = world) +
+    geom_sf(data = populated_places, fill = 'black', alpha = 0.2, aes(size = pop_max)) +
+    geom_sf(color='red', aes(size=pop_max)) +
+    ggrepel::geom_label_repel(aes(label=name, 
+                                  x=st_coordinates(top_n)[,'X'],
+                                  y=st_coordinates(top_n)[,'Y']),
+                              size = 4,
+                              data=top_n) +
+  
+    labs(title = 'TOP 15 MOST POPULATED CITIES',
+         size = 'Population', 
+         caption = 'Source: https://www.naturalearthdata.com/',
+         x = '', 
+         y = '') +
+  theme_light()
+```
+
+![](populated-places_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->

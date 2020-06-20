@@ -1,0 +1,43 @@
+---
+title: "Zajęcia 4"
+author: "Kornelia Ćwik"
+date: "9 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(raster)
+```
+
+## Zad. 1
+### 1. Pobierz model wysokościowy Polski.
+
+```{r}
+DEM.Pl <- getData('alt', country='POL', mask=TRUE)
+plot(DEM.Pl)
+```
+
+### 2. Sprawdź wysokość minimalną i maksymalną w Polsce.
+```{r}
+min.Pl <- min(DEM.Pl[ ], na.rm = T)
+min.Pl
+max.Pl <- max(DEM.Pl[ ], na.rm = T)
+max.Pl
+```
+
+### 3. Zreklasyfikuj cyfrowy model terenu, aby wskazać depresje (obszary poniżej 0).
+```{r}
+rec.mat <- matrix(c(0, max.Pl, 0,
+                    min.Pl-1, 0, 1),
+                  ncol = 3, byrow = TRUE)
+DEM.Pl.reclass <- reclassify(x = DEM.Pl,
+                             rcl = rec.mat) 
+  
+```
+
+### 4. Wyświetl mapę
+```{r}
+plot(DEM.Pl.reclass)
+```
+

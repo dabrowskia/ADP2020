@@ -1,0 +1,74 @@
+---
+title: "Zajecia 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(dplyr)
+library(ggplot2)
+
+```
+
+## Zadanie 1
+
+Wyświetlcie mapę krajów Europejskich  wg liczby ludności
+
+```{r}
+world %>% 
+select(pop)%>%
+plot()
+```
+
+## Zadanie 2
+
+Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
+
+
+```{r}
+
+world %>%
+select(pop,name_long)%>%
+arrange(pop) -> posortowane
+head(posortowane,1)
+```
+
+
+## Zadanie 3
+
+Ile krajów znajduje się w Azji?
+
+```{r}
+world1=subset(world,continent == 'Asia')
+nrow(world1)
+```
+
+
+## Zadanie 4
+
+Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+
+```{r}
+worldSlov<- world %>%
+filter(type == "Sovereign country")
+
+ggplot(worldSlov, aes(x = area_km2)) +
+geom_histogram()
+```
+
+
+
+## Zadanie 5
+
+Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+```{r}
+
+ggplot(world, aes(x = lifeExp, y = gdpPercap)) +
+geom_point()
+```
+
+

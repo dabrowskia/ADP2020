@@ -1,0 +1,76 @@
+---
+title: "Zajecia3"
+author: "Marcin Pawlicki"
+date: "4/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(spData)
+library(sf)
+library(ggplot2)
+library(readxl)
+```
+
+## Zadanie 1
+
+```{r} 
+lnd_point = st_point(c(17.1, 53.2))                 
+lnd_geom = st_sfc(lnd_point, crs = 4326)           
+
+lnd_attrib = data.frame(                           
+  name = "Polska",
+  temperature = 10,
+  date = as.Date("2020-04-25")
+  )
+
+lnd_sf = st_sf(lnd_attrib, geometry = lnd_geom)    
+
+ggplot() + 
+  geom_sf(data = world) +
+  geom_sf(data = lnd_sf, size = 5, col = 'red') + 
+  theme_light()
+
+```
+
+```{r}
+# punkt %>%
+  # st_transform(2190) %>% # Kod dla Polski
+  # st_buffer(1) # Ile metrów w okół punktu
+```
+
+## Zadanie 2
+
+```{r}
+polygon_border <- rbind(c(13, 54), c(24, 54), c(24, 48), c(13, 48), c(13, 54))
+polygon_list <- list(polygon_border)
+
+poland_square <- st_polygon(polygon_list) %>% 
+  st_sfc(crs = 4326) %>% 
+  st_sf()
+
+linestring_matrix <- rbind(c(11, 52), c(15, 52), c(17, 52), c(18, 52), c(20, 52), c(21, 52), c(22, 52), c(23, 52), c(25, 52), c(27, 52))
+line <- st_linestring(linestring_matrix)
+
+poland_line <- st_linestring(linestring_matrix) %>%
+  st_sfc(crs = 4326) %>%
+  st_sf()
+
+ggplot() + 
+  geom_sf(data = world) +
+  geom_sf(data = poland_square, col = 'red') +
+  geom_sf(data = poland_line, col = 'green') +
+  theme_light()
+```
+
+## Zadanie 3
+```{r}
+siatka <- read_sf('C:/Users/Marcin/Desktop/Studia/Magisterka/Analiza Danych Przestrzennych/PRG_jednostki_administracyjne_v39_SZPRG/Powiaty.shp')
+
+atrybuty <- read_xls('C:/Users/Marcin/Desktop/Studia/Magisterka/Analiza Danych Przestrzennych/ADP2020/personal/marcin_pawlicki/data/targowiska2018.xls')
+
+siatka.targ.atr <- left_join(siatka, atrybuty,
+                            by = c("JPT_KOD_JE" = "Kod"))
+```

@@ -380,6 +380,7 @@ max.dem &lt;- max(DEM.Poland[ ], na.rm = T)
 min.dem &lt;- min(DEM.Poland[ ], na.rm = T)</code></pre>
 <pre class="r"><code>DEM.Poland.reclass &lt;- reclassify(x = DEM.Poland,
                                  rcl = matrix(c(-12,0,1,                                                0,max.dem,0),                                               ncol=3,byrow=T))</code></pre>
+
 </div>
 <div id="depresje-w-polsce" class="section level2">
 <h2>Depresje w Polsce</h2>
