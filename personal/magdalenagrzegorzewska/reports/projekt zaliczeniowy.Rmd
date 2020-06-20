@@ -1,5 +1,6 @@
 ---
 title: "Projekt zaliczeniowy"
+author: Agnieszka Buszta, Magdalena Grzegorzewska
 output: html_document
 ---
 
@@ -12,17 +13,13 @@ library(sf)
 library(plotly)
 library(corrplot)
 library(viridis)
-library(raster)
-
-library(tmap)
-
 ```
 
 ## Projekt zaliczniowy
+##Porównanie wynagrodzeń w latach 2003, 2004 i 2005. Celem jest zbadanie wpływu wejscia Polski do Uni Europejskiej. 
 
-
-```{r cars}
-powiaty<- st_read(dsn = 'j:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/Powiaty.shp')
+```{r}
+powiaty <- st_read(dsn = 'j:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/Powiaty.shp')
 
 powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
 
@@ -31,7 +28,6 @@ wojewodztwa <- st_read(dsn = 'j:/Documents/ADP2020/personal/magdalenagrzegorzews
 wojewodztwa$JPT_KOD_JE <-paste0(wojewodztwa$JPT_KOD_JE, '00000')
 
 wynagrodzeniewojewodztwa <- readxl::read_xlsx('J:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/wynagrodzeniewojewodztwa.xlsx')
-
 
 wynagrodzenia <- readxl::read_xlsx('J:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/wynagrodzenie.xlsx')
 ```
@@ -44,17 +40,17 @@ dane <- powiaty %>%
 
 
 dane %>%
-  ggplot(aes(fill=`2003`, geometry=geometry)) +
+  ggplot(aes(fill=`rok2003`, geometry=geometry)) +
   geom_sf() +
   labs(title = 'Wynagrodzenie przed wejściem Polski do UE')
 
 dane %>%
-  ggplot(aes(fill=`2004`, geometry=geometry)) +
+  ggplot(aes(fill=`rok2004`, geometry=geometry)) +
   geom_sf() +
   labs(title = 'Wynagrodzenie na przełomie wejścia Polski do UE')
 
 dane %>%
-  ggplot(aes(fill=`2005`, geometry=geometry)) +
+  ggplot(aes(fill=`rok2005`, geometry=geometry)) +
   geom_sf() +
   labs(title = 'Wynagrodzenie po wejściu Polski do UE')
 
@@ -62,7 +58,7 @@ dane %>%
 
 
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 daneWojewodztwa <- wojewodztwa %>%
   left_join(wynagrodzenia, by = c('JPT_KOD_JE' = 'Kod')) 
 
@@ -88,21 +84,55 @@ map3 <- daneWojewodztwa %>%
 ## Podsumowanie wynagrodzenie w województwach
 
 
-```{r pressure, echo=FALSE}
+```{r , echo=FALSE}
 Dane <-summary(wynagrodzeniewojewodztwa)
 Dane
 ```
 
+## Wykresy przedstwiające średnie wynagrodzenie w województwach w poszczególnych latach
 
-
-```{r pressure, echo=FALSE}
-wykres1 <- ggplot(wynagrodzeniewojewodztwa, aes(x = rok2003, y=Nazwa)) +
+```{r , echo=FALSE}
+ggplot(wynagrodzeniewojewodztwa, aes(x = rok2003, y=Nazwa)) +
   geom_point() 
 
-wykres2 <- ggplot(wynagrodzeniewojewodztwa, aes(x = rok2004, y=Nazwa)) +
+ggplot(wynagrodzeniewojewodztwa, aes(x = rok2004, y=Nazwa)) +
   geom_point() 
 
-wykres3 <- ggplot(wynagrodzeniewojewodztwa, aes(x = rok2005, y=Nazwa)) +
+ggplot(wynagrodzeniewojewodztwa, aes(x = rok2005, y=Nazwa)) +
   geom_point() 
+
+```
+
+## Podsumowanie danych wynagrodzen w powiatach
+
+
+```{r , echo=FALSE}
+Dane <-summary(wynagrodzenia)
+Dane
+
+```
+
+## Wzrost średnich wypłat
+
+```{r , echo=FALSE}
+wynagrodzeniewojewodztwa <- mutate(wynagrodzeniewojewodztwa,
+                       roznica = rok2004 - rok2003)
+wynagrodzeniewojewodztwa <- mutate(wynagrodzeniewojewodztwa,
+                       roznica2 = rok2005 - rok2004)
+
+wynagrodzeniewojewodztwa
+
+```
+
+
+## Kartogramy
+
+```{r , echo=FALSE}
+
+a <- tm_shape(daneWojewodztwa) + tm_fill(col = "JPT_NAZWA_")
+b <- tm_shape(dane) + tm_fill(col = "JPT_NAZWA_")
+
+tmap_arrange(a, b)
+
 ```
 
