@@ -1,7 +1,9 @@
 ---
-title: "Projekt zaliczeniowy"
-author: Agnieszka Buszta, Magdalena Grzegorzewska
-output: html_document
+title: "Statystyki strefowe"
+author: "Agnieszka Buszta, Magdalena Grzegorzewska"
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -13,9 +15,10 @@ library(sf)
 library(plotly)
 library(corrplot)
 library(viridis)
+library(tmap)
 ```
 
-## Projekt zaliczniowy
+## Projekt zaliczeniowy
 ##Porównanie wynagrodzeń w latach 2003, 2004 i 2005. Celem jest zbadanie wpływu wejscia Polski do Uni Europejskiej. 
 
 ```{r}
@@ -129,10 +132,121 @@ wynagrodzeniewojewodztwa
 
 ```{r , echo=FALSE}
 
-a <- tm_shape(daneWojewodztwa) + tm_fill(col = "JPT_NAZWA_")
-b <- tm_shape(dane) + tm_fill(col = "JPT_NAZWA_")
+a <- tm_shape(daneWojewodztwa) + 
+    tm_polygons(col = "JPT_NAZWA_",
+              title = "Województwa", 
+              palette = "Set2") +
+    tm_format("NLD", title="Kartogram województw", bg.color="white")
 
-tmap_arrange(a, b)
+b <- tm_shape(dane) + 
+    tm_polygons(col = "JPT_NAZWA_",
+              title = "Powiaty", 
+              palette = "Set2") +
+  tm_format("NLD", title="Kartogram powiatów", bg.color="white")
+
+tmap_arrange(a, b) 
 
 ```
+
+
+```{r fig.cap = "Wykres 1", echo = FALSE}
+#wykresy
+wynagrodzenia %>% 
+  select(Nazwa, rok2003) %>% 
+  arrange(-rok2003) %>% 
+  head(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, rok2003), y=rok2003)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najwyższym wynagrodzeniem w 2003 roku", 
+       subtitle = "Rok 2003",
+       y="Wynagrodzenie") +
+  coord_flip()
+
+
+```
+```{r fig.cap = "Wykres 2", echo = FALSE}
+wynagrodzenia %>% 
+  select(Nazwa, rok2003) %>% 
+  arrange(-rok2003) %>% 
+  tail(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, -rok2003), y=rok2003)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najniższym wynagrodzeniem w 2003 roku", 
+       subtitle = "Rok 2003",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+
+```{r fig.cap = "Wykres 3", echo = FALSE}
+#wykresy
+wynagrodzenia %>% 
+  select(Nazwa, rok2004) %>% 
+  arrange(-rok2004) %>% 
+  head(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, rok2004), y=rok2004)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najwyższym wynagrodzeniem w 2004 roku", 
+       subtitle = "Rok 2004",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+ 
+
+
+```{r fig.cap = "Wykres 4", echo = FALSE}
+wynagrodzenia %>% 
+  select(Nazwa, rok2004) %>% 
+  arrange(-rok2004) %>% 
+  tail(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, -rok2004), y=rok2004)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najniższym wynagrodzeniem w 2004 roku", 
+       subtitle = "Rok 2004",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+ 
+
+
+
+```{r fig.cap = "Wykres 5", echo = FALSE}
+#wykresy
+wynagrodzenia %>% 
+  select(Nazwa, rok2005) %>% 
+  arrange(-rok2005) %>% 
+  head(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, rok2005), y=rok2005)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najwyższym wynagrodzeniem w 2005 roku", 
+       subtitle = "Rok 2005",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+ 
+
+```{r fig.cap = "Wykres 6", echo = FALSE}
+wynagrodzenia %>% 
+  select(Nazwa, rok2005) %>% 
+  arrange(-rok2005) %>% 
+  tail(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, -rok2005), y=rok2005)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najniższym wynagrodzeniem w 2005 roku", 
+       subtitle = "Rok 2005",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+Z analizy wynoika, że wejscie do UE nie miało wpływu na średnie wynagrodzenie brutto.
+
 
