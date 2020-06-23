@@ -1,0 +1,273 @@
+---
+title: "Analiza ilości małżeństw i bezrobocia kobiet w poszczególnych powiatach"
+author: "Cezary Pukownik, Adam Cencek"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(knitr)
+library(dplyr)
+library(sf)
+library(raster)
+library(spData)
+#library(spDataLarge)
+library(ggplot2)
+library(readxl)
+library(tmap)
+
+```
+
+# Przygotowanie danych
+
+&nbsp;
+
+**Dane do analizy zostały pobrane ze strony Głownego Urzędu Statystycznego (GUS) z Banku Danych Lokalnych. Użyto współczynnik feminizacji, liczbę ludności, liczbę małżeństw na 1000 osób oraz liczbę bezrobotnych w poszczególnych powiatach. Dane dla roku 2018.**
+
+&nbsp;
+
+
+```{r message=FALSE}
+feminizacja = readxl::read_excel('../data/Feminizacja_Gminy.xlsx', sheet = 'TABLICA')
+ludnosc = readxl::read_excel('../data/Ludnosc.xlsx', sheet = 'TABLICA') 
+malzenstwa = readxl::read_excel('../data/Malzenstwa_Gminy.xlsx', sheet = 'TABLICA')
+bezrobocie = readxl::read_excel('../data/Bezrobocie_rejestrowne.xlsx', sheet = 'TABLICA')
+```
+
+&nbsp;
+
+```{r include=FALSE}
+ludnosc <- ludnosc %>% 
+   dplyr::select(Kod, ludnosc=ogółem, ludn.m=...4, ludn.k=...5)
+
+```
+
+```{r}
+kable(head(feminizacja))
+kable(head(ludnosc))
+kable(head(malzenstwa))
+kable(head(bezrobocie))
+```
+
+```{r include=FALSE}
+powiaty <- st_read('../data/mapy/Powiaty.shp')
+wojewodztwa <- st_read('../data/mapy/Województwa.shp')
+
+powiaty['JPT_KOD_JE'] <-  paste0(powiaty$JPT_KOD_JE, '000')
+
+powiaty <- powiaty %>% 
+  dplyr::select(Kod=JPT_KOD_JE, Nazwa=JPT_NAZWA_)
+
+wojewodztwa_df <- wojewodztwa %>% 
+  dplyr::select(Kod=JPT_KOD_JE, Nazwa=JPT_NAZWA_)
+
+st_geometry(wojewodztwa_df) <- NULL
+
+wojewodztwa_df
+
+powiaty <- powiaty %>%
+  mutate(Kod_woj=Kod) %>%
+  mutate_at('Kod_woj', substr, 1,2) %>%
+  left_join(wojewodztwa_df, by=c('Kod_woj'='Kod'))%>%
+  dplyr::select(Kod, Powiat=Nazwa.x, Wojewodztwo=Nazwa.y)
+```
+
+
+&nbsp;
+
+**Całość danych po obróbce i sparowaniu z regionami można zestawić w jednej wielokolumnowej tabeli.**
+
+&nbsp;
+
+```{r echo=FALSE}
+df <- powiaty %>%
+  left_join(feminizacja, by=c('Kod'='Kod')) %>% 
+  left_join(malzenstwa, by=c('Kod'='Kod')) %>% 
+  left_join(bezrobocie, by=c('Kod'='Kod')) %>% 
+  left_join(ludnosc, by=c('Kod'='Kod')) %>% 
+  dplyr::select(Kod, Powiat, Wojewodztwo, feminizacja=ogółem.x, `malzenstwa`=ogółem.y, bezrobocie.m = mezczyzni, bezrobocie.k = kobiety, ludnosc, ludn.m, ludn.k) %>% 
+  mutate_at('feminizacja', as.numeric) %>% 
+  mutate_at('malzenstwa', as.numeric) %>%
+  
+  mutate_at('ludnosc', as.numeric) %>% 
+  mutate_at('ludn.m', as.numeric) %>% 
+  mutate_at('ludn.k', as.numeric) %>% 
+  
+  mutate_at('bezrobocie.m', as.numeric) %>% 
+  mutate_at('bezrobocie.k', as.numeric)
+
+df %>% 
+  as_tibble() %>% 
+   head()
+
+```
+
+
+&nbsp;
+
+# Analiza - czy liczba małżeństw ma wpływ na bezrobocie u kobiet?
+
+&nbsp;
+
+**Aby wykluczyć wpływ wielkości ludności na bezrobocie, obliczono wspołczynnik małżeństw i bezrobocia, jako  stosunek miary do ludności.**
+
+&nbsp;
+
+```{r echo=FALSE}
+df <- df %>%
+  mutate(wsp.malz = malzenstwa/ludnosc,
+         wsp.bezr.k = bezrobocie.k/ludn.k,
+         wsp.bezr.m = bezrobocie.m/ludn.m)
+
+kable(
+  head(
+    df %>% 
+    as_tibble() %>% 
+    dplyr::select(Powiat,wsp.malz,wsp.bezr.k,wsp.bezr.m)))
+```
+
+&nbsp;
+
+**Obliczenia można przedstawić jako mapa ciepła Polski w podziale na powiaty**
+
+&nbsp;
+
+```{r echo=FALSE}
+df %>% 
+  ggplot(aes(fill=`wsp.bezr.k`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Współczynnik procentowy bezrobocia kobiet w Polsce') +
+  theme_void()
+```
+&nbsp;
+
+**Największy współczynnik bezrobocia kobiet, jest w powiecie szydłowieckim w woj. mazowieckim i wynosi ponad 8%**
+
+&nbsp;
+
+```{r echo=FALSE}
+kable(df %>%
+  as_tibble()%>%
+  dplyr::select(Powiat,Wojewodztwo,wsp.bezr.k)%>%
+  arrange(-wsp.bezr.k) %>%
+  
+  head(10))
+```
+
+&nbsp;
+
+```{r echo=FALSE,fig.width=8,fig.height=4}
+df %>%
+  arrange(-wsp.bezr.k) %>%
+  head(10) %>%
+  ggplot(aes(x=reorder(Powiat, wsp.bezr.k), y=wsp.bezr.k, fill=Wojewodztwo)) +
+  geom_col() +
+  coord_flip()
+```
+
+&nbsp;
+
+**Czy liczba małżeństw jest skorelowana z bezrobociem kobiet?**
+
+
+&nbsp;
+
+```{r echo=FALSE}
+
+df %>%
+  ggplot(aes(x=wsp.malz, y=wsp.bezr.k, color=Wojewodztwo)) +
+  geom_point()+
+  # geom_smooth(method='lm') +
+  #scale_x_log10()+
+  #scale_y_log10()+
+  labs(title='Współczynnik zawartych małżeństw do współczynnika bezrobocia w Polsce',
+       subtitle = 'z podziałem na powiaty',
+       x='Współczynnik zawartych małżeństw',
+       y='Współczynnik bezrobocia kobiet')
+
+```
+
+&nbsp;
+
+```{r echo = FALSE,fig.width=8,fig.height=4}
+df %>%
+  arrange(-wsp.malz) %>%
+  head(10) %>%
+  ggplot(aes(x=reorder(Powiat, wsp.malz), y=wsp.malz, fill=Wojewodztwo)) +
+  geom_col() +
+  coord_flip()
+```
+
+
+**Na wykresie rozrzutu nie widać korelacji między tymi dwoma zmiennymi. Wygląda na to, że liczba małżeństw, nie ma wpływu na bezrobocie kobiet w Polsce.**
+
+&nbsp;
+
+**Można jeszcze obliczyć współczynnik korelacji Pearsona. Jest to jednak test parametryczny zakładający rozkład zbliżony do normalnego badanych zmiennych i warto się upewnić, że te wymaganie jest spełnione**
+
+&nbsp;
+
+```{r,echo=FALSE, message=F,fig.width=8,fig.height=4}
+ggplot(df, aes(x=wsp.malz)) + 
+  geom_histogram(aes(y=..density..),bins=15) +
+  geom_density(alpha=.2, fill="#FF6666") 
+```
+```{r echo=FALSE, message=F}
+ggplot(df, aes(x=wsp.bezr.k)) + 
+  geom_histogram(aes(y=..density..),bins=20) +
+  geom_density(alpha=.2, fill="#116666")
+```
+
+&nbsp;
+
+***widać, że współczynnik bezrobocia wsród kobiet nie przyjmuje zadowalającego kształtu, różnica nie jest duża aczkolwiek bezpieczniej będzie obliczyć nieparametryczny test korelacyjny Spearmana***
+
+&nbsp;
+
+
+```{r echo=FALSE}
+cor.test(df$wsp.malz, df$wsp.bezr.k,method = "spearman")
+```
+
+&nbsp;
+
+***co powinno być wynikiem zbliżonym do współczynnika Pearsona dla zlogarytmowanej wartości współczynnika bezrobocia wśród kobiet***
+
+&nbsp;
+
+```{r echo=FALSE, message=FALSE}
+ggplot(df, aes(x=log(wsp.bezr.k))) + 
+  geom_histogram(aes(y=..density..),bins = 10) +
+  geom_density(alpha=.2, fill="#116666")
+```
+
+```{r echo=FALSE}
+cor.test(df$wsp.malz, log(df$wsp.bezr.k),method='pearson')
+```
+
+&nbsp;
+
+***Dla poównania współczynnik Pearsona dla niezlogarytmizowanych danych***
+
+&nbsp;
+
+
+```{r echo=FALSE}
+cor.test(df$wsp.malz, df$wsp.bezr.k,method='pearson')
+```
+
+&nbsp;
+
+***wykres rozrzutu i współczynnik Spearmana wykluczają jednak korelację***
+
+&nbsp;
+
+
+
+
+
+

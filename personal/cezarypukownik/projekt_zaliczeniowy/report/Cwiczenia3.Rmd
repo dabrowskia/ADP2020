@@ -1,0 +1,92 @@
+---
+title: "Projekt zaliczeniowy na Analizę danych przestrzennych"
+output: html_document
+author: 'Cezary Pukownik, Adam Cencek'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(sf)
+library(spData)
+library(knitr)
+
+```
+
+# Dane GUS
+
+Feminizacja - liczba kobiet na 100 męszczyzn.
+```{r}
+powiaty <- st_read('../data/mapy/Powiaty.shp')
+powiaty['JPT_KOD_JE'] <-  paste0(powiaty$JPT_KOD_JE, '000') # dodaj 000 na końcu aby połączyć
+powiaty <- powiaty %>% 
+  select(Kod=JPT_KOD_JE, Nazwa=JPT_NAZWA_)
+
+#join po JPT_KOD_JE
+
+feminizacja = readxl::read_excel('../data/Feminizacja_Gminy.xlsx', sheet = 'TABLICA')
+ludnosc = readxl::read_excel('../data/Ludność.xlsx', sheet = 'TABLICA') 
+malzenstwa = readxl::read_excel('../data/Małżeństwa_Gminy.xlsx', sheet = 'TABLICA') # ok
+bezrobocie = readxl::read_excel('../data/Bezrobocie_rejestrowne.xlsx', sheet = 'TABLICA') # ok
+
+```
+
+
+
+
+```{r}
+ludnosc <- ludnosc %>% 
+  select(Kod, ludnosc=ogółem, ludn.m=...4, ludn.k=...5)
+```
+
+
+
+Połączenie danych
+```{r}
+df <- powiaty %>%
+  left_join(feminizacja, by=c('Kod'='Kod')) %>% 
+  left_join(malzenstwa, by=c('Kod'='Kod')) %>% 
+  left_join(bezrobocie, by=c('Kod'='Kod')) %>% 
+  left_join(ludnosc, by=c('Kod'='Kod')) %>% 
+  select(Kod, Nazwa=Nazwa.y, feminizacja=ogółem.x, małżeństwa=ogółem.y, bezrobocie.m = mężczyźni, bezrobocie.k = kobiety, ludnosc, ludn.m, ludn.k) %>% 
+  mutate_at('feminizacja', as.numeric) %>% 
+  mutate_at('małżeństwa', as.numeric) %>%
+  mutate_at('bezrobocie.m', as.numeric) %>% 
+  mutate_at('bezrobocie.k', as.numeric)
+  
+df %>% 
+  as.tibble() %>% 
+  head() 
+  ```
+
+
+```{r}
+df %>% 
+  ggplot(aes(fill=małżeństwa, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Liczba kobiet przypadających na 100 mężczyzn z Polsce') +
+  theme_void()
+  
+  
+```
+
+
+```{r}
+#TOP 10 NAJWIĘCEJ
+feminizacja_geom %>% 
+  st_set_geometry(NULL) %>%
+  arrange(-feminizacja) %>% 
+  head(10) %>% 
+  kable()
+```
+
+```{r}
+#TOP 10 NAJMNIEJ
+feminizacja_geom %>% 
+  st_set_geometry(NULL) %>%
+  arrange(feminizacja) %>% 
+  head(10) %>% 
+  kable()
+```
+
