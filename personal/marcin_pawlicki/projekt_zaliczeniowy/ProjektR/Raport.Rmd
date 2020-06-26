@@ -18,12 +18,9 @@ library(ggplot2)
 library(tmap)
 library(leaflet)
 library(mapview)
-
-options(scipen = 10000)
 ```
 
 ## Przygotowanie danych z roku 2019
-
 
 ```{r prepare_data, echo=FALSE}
 powiaty <- st_read('../Dane/Powiaty.shp', stringsAsFactors = F)
@@ -43,52 +40,53 @@ dane_lud_zgl_czyt <- ludnosc_zgloszenia_czytelnicy %>% dplyr::select('Nazwa.x', 
 ### Ilość zgłoszeń do urzędu patentowego RP na poziomie powiatu
 
 ```{r pressure, echo=FALSE}
-dane_lud_zgl$zgloszenia_na_ludnosc <- (as.numeric(dane_lud_zgl$zgloszenia_uprp) / as.numeric(dane_lud_zgl$ludnosc)) * 100
+dane_lud_zgl$zgloszenia_na_1000_lud <- (as.numeric(dane_lud_zgl$zgloszenia_uprp) / as.numeric(dane_lud_zgl$ludnosc)) * 1000
 
 ggplot() + 
-  geom_sf(data = dane_lud_zgl, aes(fill = zgloszenia_na_ludnosc)) + 
-  scale_fill_gradientn(colors = terrain.colors(7), limits = c(0, max(dane_lud_zgl$zgloszenia_na_ludnosc)), breaks = seq(0, 1, by = 0.01)) +
-  labs(title = 'Procent zgloszeń na całą ludność powiatu', fill = 'Procent zgłoszeń') + 
+  geom_sf(data = dane_lud_zgl, aes(fill = zgloszenia_na_1000_lud)) + 
+  scale_fill_gradientn(colors = terrain.colors(7)) +
+  labs(title = 'Liczba zgłoszeń do UPRP na 1000 mieszkańców', fill = 'L. zgłoszeń UPRP/1000 mieszkańców') + 
     theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(),
           axis.text.y = element_blank(), axis.ticks.y = element_blank())
 ```
 
 Wyszarzone powiaty na mapie oznaczają brak zgłoszeń do urzędu patentowego w danym powiecie.  
 
-Największy udział procentowy zgłoszeń do urzędów patentowych w 2019 roku wystąpił w powiecie m. Gliwice (0,075%), następnie w powiecie m. Lublin (0.062%) i kolejno w powiecie m. Rzeszów (0.046%), m. Wrocław (0.044%) oraz m. Katowice (0.04%).  
+Najwięcej zgłoszeń do urzędów patentowych na 1000 mieszkańców w 2019 roku miało miejsce w powiecie m. Gliwice (0.756/1000m.), następnie w powiecie m. Lublin (0.62/1000m.) i kolejno w powiecie m. Rzeszów (0.46/1000m.), m. Wrocław (0.44/1000m.) oraz m. Katowice (0.4/1000m.).  
 
-Pomijając powiaty, w których nie odnotowano w roku 2019 żadnych zgłoszeń do urzędu patentowego najmniejszy procent ludności dokonał zgłoszeń w powiatach Inowrocławskim (0.0006%), Pilskim (0.0007%), Płockim (0.0009%), Raciborskim (0.00092%) oraz Łukowskim (0.00093%).  
+Pomijając powiaty, w których nie odnotowano w roku 2019 żadnych zgłoszeń do urzędu patentowego najmniejszy procent ludności dokonał zgłoszeń w powiatach Inowrocławskim (0.006/1000m.), Pilskim (0.007/1000m.), Płockim (0.009/1000m.), Raciborskim (0.0092/1000m.) oraz Łukowskim (0.0093/1000m.).  
 
 Powyższy podział można zaobserwować na wykresach słupkowych poniżej.
 
 ```{r min_max_zgloszenia, echo=FALSE}
-top5_zgloszen_powiaty <- dane_lud_zgl %>% arrange(-zgloszenia_na_ludnosc) %>% head(5)
-bottom5_zgloszen_powiaty <- dane_lud_zgl %>% arrange(zgloszenia_na_ludnosc) %>% head(5)
+top5_zgloszen_powiaty <- dane_lud_zgl %>% arrange(-zgloszenia_na_1000_lud) %>% head(5)
+bottom5_zgloszen_powiaty <- dane_lud_zgl %>% arrange(zgloszenia_na_1000_lud) %>% head(5)
 
-top5_zgloszen_powiaty %>% ggplot(aes(x = Nazwa.x, y = zgloszenia_na_ludnosc)) + 
-  geom_col(fill = 'green') + 
-  labs(title = 'Powiaty z największym procentem zgłoszeń do urzędu patentowego', x = "Powiat", y = "Procent zgloszen")
+top5_zgloszen_powiaty %>% ggplot(aes(x = Nazwa.x, y = zgloszenia_na_1000_lud)) + 
+  geom_col(fill = '#E69F00') + 
+  labs(title = 'Powiaty z największą l. zgłoszeń do urzędu patentowego na 1000 m.', x = "Powiat", y = "L. zgłoszeń/1000m.")
 
-bottom5_zgloszen_powiaty %>% ggplot(aes(x = Nazwa.x, y = zgloszenia_na_ludnosc)) + 
-  geom_col(fill = 'red') + 
-  labs(title = 'Powiaty z najmniejszym procentem zgłoszeń do urzędu patentowego', x = "Powiat", y = "Procent zgloszen")
+bottom5_zgloszen_powiaty %>% ggplot(aes(x = Nazwa.x, y = zgloszenia_na_1000_lud)) + 
+  geom_col(fill = '#D55E00') + 
+  labs(title = 'Powiaty z najmniejszą l. zgłoszeń do urzędu patentowego', x = "Powiat", y = "L. zgłoszeń/1000m.")
 ```
   
 Jedną z ciekawych zależności jaką można by zweryfikować jest to czy liczba czytelników bibliotek publicznych ma jakiś wpływ na to jak często zgłaszane są w urzędzie patentowym innowacyjne projekty. Aby to zwizualizować można utworzyć wykres korelacji tych zmiennych:
 
 ```{r korelacja_czytelnicy_zgloszenia, echo=FALSE}
-dane_lud_zgl_czyt$zgloszenia_na_ludnosc <- (as.numeric(dane_lud_zgl$zgloszenia_uprp) / as.numeric(dane_lud_zgl$ludnosc)) * 100
+dane_lud_zgl_czyt$zgloszenia_na_1000_lud <- (as.numeric(dane_lud_zgl_czyt$zgloszenia_uprp) / as.numeric(dane_lud_zgl_czyt$ludnosc)) * 1000
+dane_lud_zgl_czyt$czytelnicy_na_1000_lud <- (as.numeric(dane_lud_zgl_czyt$czytelnicy_rok) / as.numeric(dane_lud_zgl$ludnosc)) * 1000
 
-na.omit(dane_lud_zgl_czyt) %>% ggplot(aes(x = zgloszenia_na_ludnosc, y = czytelnicy_rok)) + 
+na.omit(dane_lud_zgl_czyt) %>% ggplot(aes(x = zgloszenia_na_1000_lud, y = czytelnicy_na_1000_lud)) + 
   geom_point(size = 3) + 
   geom_smooth(method = lm) + 
-  labs(title = "Korelacja - procent zgłoszeń, a liczba czytelników bibliotek publicznych", x = "Procent zgłoszeń do UPRP", y = "Liczba czytelników")
+  labs(title = "Korelacja - l. zgłoszeń/1000m., a liczba czytelników bibliotek publicznych/1000m.", x = "L. zgłoszeń UPRP/1000m.", y = "L. czytelników/1000m.")
 ```
 
 Z wykresu wynika, że lekka korelacja pomiędzy tymi zmiennymi jest możliwa. Można to sprawdzić wykorzystując współczynnik Pearsona:
 
 ```{r korelacja_pearson, echo=FALSE}
-cor.test(dane_lud_zgl_czyt$zgloszenia_na_ludnosc, dane_lud_zgl_czyt$czytelnicy_rok)
+cor.test(dane_lud_zgl_czyt$zgloszenia_na_1000_lud, dane_lud_zgl_czyt$czytelnicy_rok)
 ```
 
 Współczynnik korelacji Pearsona wynosi w tym przypadku 0.4615055, a więc jest to korelacja umiarkowana, a dodatni znak sugeruje, że przy wzroście liczby czytelników rośnie też liczba zgłoszeń do urzędu patentowego. P-wartość jest mniejsza niż 0,05 więc liczba czytelników bibliotek publicznych jest zmienną istotną.
@@ -96,44 +94,44 @@ Współczynnik korelacji Pearsona wynosi w tym przypadku 0.4615055, a więc jest
 Do analizy można dodać również mapę Polski z zaznaczonymi centroidami i ukształtowaniem terenu.
 
 ```{r kartogram, echo=FALSE, warning=FALSE}
-dem <- getData('alt', country = "PL") 
-powiaty2 <- transform(powiaty, 4326) 
-m1 <- tm_shape(dem) + 
+dem <- getData('alt', country = "PL")
+powiaty2 <- transform(powiaty, 4326)
+m1 <- tm_shape(dem) +
   tm_raster()
-m2 <- m1 + tm_shape(powiaty) + 
-  tm_borders() 
-centroidy <- st_centroid(powiaty2) 
-m3 <- m2 + tm_shape(centroidy) + 
+m2 <- m1 + tm_shape(powiaty) +
+  tm_borders()
+centroidy <- st_centroid(powiaty2)
+m3 <- m2 + tm_shape(centroidy) +
   tm_dots()
 
-tm_shape(dem) + tm_raster() + 
-  tm_shape(powiaty) + 
-  tm_borders() + 
-  tm_shape(st_centroid(powiaty2)) + 
-  tm_layout(legend.outside=TRUE, legend.outside.position = 'right', legend.title.size = 0.1, frame = FALSE) + 
-  tm_legend(title = 'Ukształtowanie terenu') + 
+tm_shape(dem) + tm_raster() +
+  tm_shape(powiaty) +
+  tm_borders() +
+  tm_shape(st_centroid(powiaty2)) +
+  tm_layout(legend.outside=TRUE, legend.outside.position = 'right', legend.title.size = 0.1, frame = FALSE) +
+  tm_legend(title = 'Ukształtowanie terenu') +
   tm_dots()
 ```
 
 Poniżej znajdują się kartogramy z podziałem na każdą zmienną w tej analizie:
 
 ```{r kartogramy_zmienne, echo=FALSE, warning=FALSE}
-kartogram_ludnosc <- tm_shape(dane_lud_zgl_czyt) + 
-  tm_borders() + 
-  tm_fill(col = "ludnosc", title = "Ludność") + 
-  tm_polygons(palette = "BuGn", style = 'pretty') + 
+kartogram_ludnosc <- tm_shape(dane_lud_zgl_czyt) +
+  tm_borders() +
+  tm_fill(col = "ludnosc", title = "Ludność") +
+  tm_polygons(palette = "BuGn", style = 'pretty') +
   tm_layout(legend.outside=TRUE, legend.height = 0.3, legend.outside.position = "right", frame = FALSE, bg.color = 'lightblue')
 
-kartogram_zgloszenia <- tm_shape(dane_lud_zgl_czyt) + 
-  tm_borders() + 
-  tm_fill(col = "zgloszenia_na_ludnosc", title = "Procent zgłoszeń") + 
-  tm_polygons(palette = "BuGn", style = 'pretty') + 
+kartogram_zgloszenia <- tm_shape(dane_lud_zgl_czyt) +
+  tm_borders() +
+  tm_fill(col = "zgloszenia_na_1000_lud", title = "Procent zgłoszeń") +
+  tm_polygons(palette = "BuGn", style = 'pretty') +
   tm_layout(legend.outside=TRUE, legend.height = 0.3, legend.outside.position = "right", frame = FALSE, bg.color = 'lightblue')
 
-kartogram_czytelnicy <- tm_shape(dane_lud_zgl_czyt) + 
-  tm_borders() + 
-  tm_fill(col = "czytelnicy_rok", title = "Liczba czytelników") + 
-  tm_polygons(palette = "BuGn", style = 'pretty') + 
+kartogram_czytelnicy <- tm_shape(dane_lud_zgl_czyt) +
+  tm_borders() +
+  tm_fill(col = "czytelnicy_rok", title = "Liczba czytelników") +
+  tm_polygons(palette = "BuGn", style = 'pretty') +
   tm_layout(legend.outside=TRUE, legend.height = 0.3, legend.outside.position = "right", frame = FALSE, bg.color = 'lightblue')
 
 kartogram_ludnosc
