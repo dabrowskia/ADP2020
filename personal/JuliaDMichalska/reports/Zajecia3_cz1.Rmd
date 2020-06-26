@@ -1,0 +1,55 @@
+---
+title: "Mapa Polski"
+output: html_document
+---
+
+```{r biblioteki, include=FALSE}
+library(sf)
+library(spData)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+```
+ 
+## Punkt
+
+```{r dane, include=FALSE}
+lnd_point = st_point(c(0.1, 51.5))                 # sfg object
+lnd_geom = st_sfc(lnd_point, crs = 4326)           # sfc object
+lnd_attrib = data.frame(                           # data.frame object
+  name = "London",
+  temperature = 25,
+  date = as.Date("2017-06-21")
+)
+lnd_sf = st_sf(lnd_attrib, geometry = lnd_geom)    # sf object
+
+```
+
+```{r punkt}
+ggplot()+
+  geom_sf(data=world, aes(fill = pop))+
+  geom_sf(data=lnd_sf, color = 'green')
+```
+
+## Kwadrat
+
+```{r dane2, include=FALSE}
+polygon_list = list(rbind(c(13, 55), c(24.5, 55), c(24.5, 48.8), c(13, 48.8), c(13, 55)))
+kwadrat <- st_polygon(polygon_list) %>%
+st_sfc(crs = 4326) %>%
+st_sf()
+
+filter(world, name_long == "Poland") -> Polska
+```
+
+
+```{r kwadrat}
+ggplot()+
+  geom_sf(data=kwadrat)+
+  geom_sf(data=Polska)
+```
+
+
+
+You can also embed plots, for example:
+
