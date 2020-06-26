@@ -1,0 +1,52 @@
+---
+title: "polska powiaty"
+author: "Justyna Glanowska"
+date: "6 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(sf)
+library(ggplot2)
+library(dplyr)
+library(readxl)
+
+```
+
+
+
+```{r}
+powiaty <- st_read(dsn = 'J:/ADP2020/personal/justynaglanowska/data/Powiaty.shp')
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+powiaty <- powiaty %>% 
+  dplyr::select(JPT_KOD_JE, geometry)
+
+```
+
+
+```{r}
+
+wynagrodzenie <- read_xlsx('J:/ADP2020/personal/justynaglanowska/data/wynagrodzenia.xlsx',
+                           sheet = 2)
+
+```
+
+
+```{r}
+dane <- powiaty %>%
+  left_join(wynagrodzenie, by = c('JPT_KOD_JE' = 'Kod'))
+names(dane)[3:20] <- paste0("rok",names(dane)[3:20])
+dane$rok2016 <- as.numeric(dane$rok2016)
+```
+
+```{r}
+ggplot(dane, aes(fill = rok2016)) +
+  geom_sf() +
+  labs(title = 'srednie wynagrodzenie w 2016 roku w podziale na powiaty') 
+```

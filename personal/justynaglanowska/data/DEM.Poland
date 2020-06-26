@@ -1,0 +1,41 @@
+---
+title: "DEM.Poland"
+author: "Justyna Glanowska"
+date: "11 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+library(raster)
+```
+
+
+
+```{r}
+DEM.Poland <- getData ('alt', country='POL',mask=TRUE)
+plot(DEM.Poland)
+DEM.Poland[]
+```
+
+```{r}
+med.dem <- median(DEM.Poland[],na.rm = T)
+max.dem <- max(DEM.Poland[], na.rm = T)
+min.dem <- min(DEM.Poland[], na.rm = T)
+```
+
+```{r}
+DEM.Poland.reclass <- reclassify(x = DEM.POland,                                 
+                                 rcl = matrix(c(min.dem - 1,0,1,  
+                                                0, max.dem,0),
+                                      ncol=3,byrow=T))
+```
+
+```{r}
+plot(DEM.Poland.reclass)
+```
