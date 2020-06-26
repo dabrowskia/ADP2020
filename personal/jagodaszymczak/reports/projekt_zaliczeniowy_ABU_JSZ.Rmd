@@ -1,0 +1,160 @@
+---
+title: "projekt_zaliczeniowy"
+author: "Adrianna Bukowska, Jagoda Szymczak"
+date: "26 06 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(sf)
+library(dplyr)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(devtools)
+library(fs)
+library(rgdal)
+library(ggplot2)
+library(gridExtra)
+library(plotly)
+```
+
+# Analiza liczby rozwodów na terenie Polski w poszczególnych powiatach
+
+Zainspirowane najpopularniejszym serialem wszech czasów - "Friends", przykuła naszą uwagę postać Rosa Gellera - trzykrotnego rozwodnika. Ciekawi nas jak sytuacja wygląda w Polsce. Ile rozwodów przypada na 1000 mieszkańców? Jak na poziom ilości rozwodów wpływa wynagrodzenie? Poniżej przedstawiamy wyniki naszej analizy. Dane zostały pobrane z oficjalnej strony GUS (Bank Danych Lokalnych).
+
+```{r}
+powiaty <- st_read(
+  dsn = '../../../Powiaty.shp')
+powiaty$JPT_KOD_JE <- paste0(powiaty$JPT_KOD_JE, '000')
+
+wynagrodzenia <- readxl::read_xlsx('../data/Wynagrodzenia.xlsx', sheet = 2)
+rozwody  <- readxl::read_xlsx('../data/Rozwody.xlsx', sheet = 2)
+
+df <- powiaty %>% 
+  left_join(rozwody, 
+            by = c('JPT_KOD_JE' = 'Kod'))
+
+kompletne_df <- df %>% left_join(wynagrodzenia, by = c('JPT_KOD_JE' = 'Kod'))
+```
+
+***
+
+## Wizualizacja danych
+
+### Liczba rozwodów w 2018 roku w poszczególnych powiatach
+
+```{r}
+ggplot(df, aes(fill = rozwody_2018)) + 
+  geom_sf() + 
+  scale_fill_gradientn(colors = c("navyblue", "darkmagenta")) +
+  labs(title = "Liczba rozwodów w 2018r. na 1000 mieszkańców",
+       fill = "liczba rozwodów")
+```
+
+Najwięcej rozwodów na 1000 mieszkańców w 2018 roku przeprowadzono w powiecie legionowskim (3 rozwody na 1000 osób). Kolejne powiaty to: - m. Leszno (2,6/1000 os.) - m. Płock (2,5/1000 os.) - m. Jastrzębie-Zdrój (2,5/1000 os.) Najmniej rozwódów odnotowano w powiecie janowskim (0,6/1000 os.).
+
+Poniższe wykresy przedstawiają powiaty o największej oraz najmniejszej liczbie rozwodów przeliczonych na 1000 osób w danym powiecie w 2019 r.
+
+```{r}
+powiaty_max_roz18 <- kompletne_df %>% 
+  dplyr::arrange(desc(kompletne_df$rozwody_2018)) %>% 
+  head(5) 
+
+powiaty_min_roz18 <- kompletne_df %>%
+  dplyr::arrange(desc(kompletne_df$rozwody_2018)) %>% 
+  tail(5)
+```
+
+```{r}
+wykres_top_roz18 <- ggplot(powiaty_max_roz18, 
+                           aes(x = powiaty_max_roz18$Nazwa.x, 
+                               y = powiaty_max_roz18$rozwody_2018)) + 
+  geom_col(fill= 'darkblue') +
+  labs(title = 'Powiaty o największej ilości rozwodów (na 1000 mieszkańców) w 2018r.', 
+       x= "", 
+       y = "ilość rozwodów")
+
+wykres_tail_roz18 <- ggplot(powiaty_min_roz18, 
+                            aes(x = powiaty_min_roz18$Nazwa.x, 
+
+                                                                y = powiaty_min_roz18$rozwody_2018)) + 
+  geom_col(fill= 'red') +
+  labs(title = 'Powiaty o najmniejszej ilości rozwodów (na 1000 mieszkańców) w 2018r.', 
+       x= "", 
+       y = "ilość rozwodów")
+```
+
+```{r}
+wykres_top_roz18
+```
+```{r}
+wykres_tail_roz18
+```
+
+### Liczba rozwodów w 2019 roku w poszczególnych powiatach
+
+```{r}
+ggplot(df, aes(fill = rozwody_2019)) + 
+  geom_sf() + 
+  scale_fill_gradientn(colors = c("navyblue", "darkmagenta")) +
+  labs(title = "Liczba rozwodów w 2019r. na 1000 mieszkańców",
+       fill = "liczba rozwodów") 
+
+```
+
+Najwięcej rozwodów na 1000 mieszkańców w 2019 roku przeprowadzono w powiatach: m. Jelenia Góra, m. Świnoujście i m. Łódź (po 2,7 rozwodów na 1000 osób). Najmniej rozwódów odnotowano w powiatach: brzozowskim, limanowskim, kolbuszowskim oraz nowosądeckim (0,7/1000 os.).
+
+Poniższe wykresy przedstawiają powiaty o największej oraz najmniejszej liczbie rozwodów przeliczonych na 1000 osób w danym powiecie w 2018 roku.
+
+```{r}
+powiaty_max_roz19 <- kompletne_df %>% 
+  dplyr::arrange(desc(kompletne_df$rozwody_2019)) %>% 
+  head(5) 
+
+powiaty_min_roz19 <- kompletne_df %>%
+  dplyr::arrange(desc(kompletne_df$rozwody_2019)) %>% 
+  tail(5)
+```
+
+```{r}
+wykres_top_roz19 <- ggplot(powiaty_max_roz19, 
+                         aes(x = powiaty_max_roz19$Nazwa.x, 
+                             y = powiaty_max_roz19$rozwody_2019)) + 
+  geom_col(fill= 'darkblue') +
+  labs(title = 'Powiaty o największej ilości rozwodów (na 1000 mieszkańców) w 2019r.', 
+       x= "", 
+       y = "ilość rozwodów")
+
+wykres_tail_roz19 <- ggplot(powiaty_min_roz19, 
+                           aes(x = powiaty_min_roz19$Nazwa.x, 
+                               y = powiaty_min_roz19$rozwody_2019)) + 
+  geom_col(fill= 'red') +
+  labs(title = 'Powiaty o najmniejszej ilości rozwodów (na 1000 mieszkańców) w 2019r.', 
+       x= "", 
+       y = "ilość rozwodów")
+```
+```{r}
+wykres_top_roz19
+```
+```{r}
+wykres_tail_roz19
+```
+
+Na co dzień można się spotkać ze stwierdzeniem, że rozwody są tylko dla bogatych. Czy liczba rozwodów rzeczywiście zależy od zamożności obywateli?
+
+```{r}
+ggplot(kompletne_df,aes(x = rozwody_2018, y= Wynagrodzenie_2018)) + 
+  geom_point(size = 3) + 
+  geom_smooth(method = lm) +
+  labs(title = "Korelacja między l. rozwodów, a średnim wynagrodzeniem", 
+       x= "liczba rozwodów na 1000 mieszkańców", 
+       y = "średnie wynagrodzenie")
+```
+
+```{r}
+cor.test(kompletne_df$rozwody_2018, kompletne_df$Wynagrodzenie_2018)
+```
+
+W celu zbadania zależności między średnim wynagrodzeniem mieszkańców, a liczbą rozwodów, wykorzystany został współczynnik Pearsona. Jego wartość wynosi ok. 0,43, a więc zależność między zmiennymi jest raczej słaba. Znak przy współczynniku Pearsona jest dodatni, co oznacza, że im wyższe wynagrodzenie, tym wyższa liczba rozwodów. Ponadto, wyliczona p-wartość (p-value) jest mniejsza niż 0,05, co oznacza, iż zmienna objaśniająca (średnie wynagrodzenie) jest istotna.
