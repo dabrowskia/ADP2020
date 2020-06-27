@@ -1,0 +1,316 @@
+---
+title: "Analiza liczby rozwodów w poszczególnych powiatach w zależności od liczby absolwentów, liczby zatrudnionych i przeciętnego wynagrodzenia brutto."
+author: "Natalia Orzechowska, Alicja Lisiecka"
+date: "16 czerwca 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(sf)
+library(corrplot)
+library(Hmisc)
+```
+
+## Wstęp
+Dane, które zostały wykorzystane do przeprowadzenia analizy pochodzą z Banku Danych Lokalnych. Dane przedstawiają ilość rozwodów wg powiatów, liczbę pracujących wg grup sekcji i płci w powiatach, liczbę absolwentów uczelni wyższych wg powiatów oraz przeciętne miesięczne wynagrodzenie brutto w relacji do średniej krajowej. Wszystkie dane pochodzą z 2018  roku. W niniejszym raporcie zostanie podjęta próba znalezienia odpowiedzi na pytanie, czy liczba rozwodów zależy od wynagrodzenia, sekcji zawodowej oraz liczby absolwentów (sugerując, że osoba jest wykształcona).
+
+
+## Przygotowanie danych
+
+```{r}
+powiaty <- st_read( dsn = 'C:/Users/Alicja/Desktop/Dane projekt zaliczeniowy/PRG_jednostki_administracyjne_v40_SZPRG/Powiaty.shp')
+
+y_rozwody <- readxl::read_xlsx('dane/rozwody.xlsx', sheet = 2)
+
+x_wynagrodzenie <- readxl::read_xlsx('dane/wynagrodzenie.xlsx', sheet = 2)
+
+x_pracujacy_sekcje <- readxl::read_xlsx('dane/pracujacy_sekcje.xlsx', sheet = 2)
+
+x_absolwenci <- readxl::read_xlsx('dane/absolwenci.xlsx', sheet = 2)
+
+
+powiaty$JPT_KOD_JE <- paste0(powiaty$JPT_KOD_JE,'000')
+
+head(powiaty$JPT_KOD_JE)
+
+#łączenie
+first_df <- left_join(y_rozwody,select(x_wynagrodzenie,Kod,`przeciętne miesięczne wynagrodzenia brutto w relacji do średniej krajowej (Polska=100)`) , by = "Kod")
+
+second_df <- left_join(first_df,x_pracujacy_sekcje,by = "Kod")
+
+
+
+
+# usuwanie kolumny 
+second_df$Nazwa.y <- NULL
+
+
+second_df <- second_df[!is.na(second_df$Kod),]
+second_df <- rename(second_df,ilosc_rozwodow = 'ogółem')
+
+
+third_df <- left_join(second_df,x_wynagrodzenie, by = "Kod")
+
+
+third_df$Nazwa <- NULL
+
+fourth_df <- left_join(third_df,x_absolwenci, by = "Kod")
+
+fourth_df$Nazwa <- NULL
+
+final_df <- powiaty %>% left_join(fourth_df, by = c ( 'JPT_KOD_JE' = 'Kod'))
+
+final_df %>% summary()
+
+final_df <- rename(final_df,przecietne_miesieczne_wynagrodzenie = `przeciętne miesięczne wynagrodzenia brutto w relacji do średniej krajowej (Polska=100).y`)
+
+dane_bez_sf <- fourth_df
+
+dane_bez_sf$`przeciętne miesięczne wynagrodzenia brutto w relacji do średniej krajowej (Polska=100).y` <- NULL
+
+summary(dane_bez_sf)
+
+
+# z tekstu na liczby
+
+dane_bez_sf$ilosc_rozwodow = as.numeric(as.character(dane_bez_sf$ilosc_rozwodow ))
+dane_bez_sf$`przeciętne miesięczne wynagrodzenia brutto w relacji do średniej krajowej (Polska=100).x` = 
+  as.numeric(as.character(dane_bez_sf$`przeciętne miesięczne wynagrodzenia brutto w relacji do średniej krajowej (Polska=100).x` ))
+dane_bez_sf$`rolnictwo, leśnictwo, łowiectwo i rybactwo` = as.numeric(as.character(dane_bez_sf$`rolnictwo, leśnictwo, łowiectwo i rybactwo`))
+dane_bez_sf$`przemysł i budownictwo` = as.numeric(as.character(dane_bez_sf$`przemysł i budownictwo` ))
+dane_bez_sf$`handel; naprawa pojazdów samochodowych; transport i gospodarka magazynowa; zakwaterowanie i gastronomia; informacja i komunikacja` = 
+  as.numeric(as.character(dane_bez_sf$`handel; naprawa pojazdów samochodowych; transport i gospodarka magazynowa; zakwaterowanie i gastronomia; informacja i komunikacja`))
+dane_bez_sf$`działalność finansowa i ubezpieczeniowa; obsługa rynku nieruchomości` = 
+  as.numeric(as.character(dane_bez_sf$`działalność finansowa i ubezpieczeniowa; obsługa rynku nieruchomości`)) 
+dane_bez_sf$`pozostałe usługi` = as.numeric(as.character(dane_bez_sf$`pozostałe usługi`)) 
+dane_bez_sf$`absolwenci ogółem` = as.numeric(as.character(dane_bez_sf$`absolwenci ogółem`))
+
+
+
+```
+
+
+
+```{r}
+#zastąpienie braków w danych mediana z kolumny 
+
+#mediany <- lapply(dane_bez_sf, 0 , na.rm = TRUE)
+dane_bez_sf[is.na(dane_bez_sf)] <-0
+
+dane_bez_sf$`przeciętne miesięczne wynagrodzenia brutto w relacji do średniej krajowej (Polska=100).y` <- NULL
+```
+
+```{r}
+dane_bez_sf <- dane_bez_sf %>%
+  rename(rozwody = `ilosc_rozwodow`,
+         wynag =`przeciętne miesięczne wynagrodzenia brutto w relacji do średniej krajowej (Polska=100).x`,
+         rolnic = `rolnictwo, leśnictwo, łowiectwo i rybactwo`,
+         przem = `przemysł i budownictwo`,
+         handel = `handel; naprawa pojazdów samochodowych; transport i gospodarka magazynowa; zakwaterowanie i gastronomia; informacja i komunikacja`,
+         finans = `działalność finansowa i ubezpieczeniowa; obsługa rynku nieruchomości`,
+         poz_usl = `pozostałe usługi`,
+         absol =  `absolwenci ogółem`)
+```
+
+
+```{r}
+# macierz korelacji 
+macierz_korelacji <-cor(dane_bez_sf[sapply(dane_bez_sf,is.numeric)])
+
+
+corrplot(macierz_korelacji, method = "circle" )
+dev.off
+
+# duza dodatnia korelacja miedzy liczba rozwodow a iloscia absolwentów
+# mała dodatnia korelacja miedzy liczbą rozwodów a wynagrodzeniem 
+# mała dodatnia korelacja miedzy liczba absolwentow a wynagrodzeniem
+# mała dodatanie korelacja miedzy praca w finansach a wynagrodzeniem
+```
+
+
+```{r}
+dane_z_sf <-  powiaty %>% left_join(dane_bez_sf, by = c ( 'JPT_KOD_JE' = 'Kod'))
+
+summary(dane_z_sf)
+```
+
+
+## Wizualizacja danych
+
+#Liczba rozwodów w poszczególnych powiatach
+```{r}
+# rozwody w powiatach 
+ggplot(dane_z_sf,aes(fill = rozwody )) + geom_sf()+
+  scale_fill_gradient( low = 'white' ,  high = 'red')
+
+dane_z_sf %>%
+  arrange(desc(rozwody))%>%
+  select(rozwody, Nazwa.x)
+
+```
+Powyższa mapa przedstawia powiaty o największej oraz najmniejszej liczbie rozwodów w danym powiecie. Wynika, że najwięcej rozwodów odnotowano w powiecie m. st. Warszawa (3.594). Na drugim miejscu jest powiat m. Wrocław (1.427) i na trzecim powiat m. Kraków (1.367). Najmniej odnotowano w powiecie łosickim (27).
+
+
+#Wynagrodzenie w powiatach
+```{r}
+#wynagrodzenie w powiatach 
+ggplot(dane_z_sf,aes(fill = wynag )) + 
+  geom_sf()+
+  scale_fill_gradient( low = 'white' ,  high = 'dark green')
+
+dane_z_sf %>%
+  arrange(desc(wynag))%>%
+  select(wynag, Nazwa.x)
+
+dane_z_sf %>%
+  arrange(wynag)%>%
+  select(wynag, Nazwa.x)
+```
+Wynika więc, że największe przeciętne wynagrodzenie w relacji do średniej krajowej brutto jest w powiecie m.Jastrzębie Zdrój. Wynosi ono 168% względem krajowego przeciętnego wynagrodzenia brutto. Najmniejsze z kolei w powiecie kępińskim, bo tylko jest to 65,8% średniej krajowej brutto.
+
+
+
+#Liczba absolwentów w poszczególnych powiatach.
+```{r}
+#ilość absolwentów
+ggplot(dane_z_sf,aes(fill = absol )) + 
+  geom_sf()+
+  scale_fill_gradient( low = 'white' ,  high = 'dark blue')
+
+dane_z_sf %>%
+  arrange(desc(absol))%>%
+  select(absol, Nazwa.x)
+
+```
+
+Najwięcej absolwentów uczelni wyższych jest w województwie mazowieckim (60.795). Jest to związane z faktem, że to województwo posiada najwięcej uczelni wyższych w Polsce.
+
+
+```{r}
+# ogarniamy rozwody w wojewodztwach
+wojewodztwa <- dane_bez_sf %>% select(Nazwa.x,Kod) %>% 
+  filter(Nazwa.x == toupper(Nazwa.x))
+wojewodztwa <- wojewodztwa[-1,]
+wojewodztwa$woj <- (substr(wojewodztwa$Kod,1,2))
+
+
+```
+
+
+```{r}
+dane_bez_sf$woj <- 'text'
+dane_bez_sf$woj <- (substr(dane_bez_sf$Kod,1,2))
+
+dane_bez_sf<-merge(dane_bez_sf,wojewodztwa,by = "woj",all.x = TRUE)
+
+
+```
+
+
+
+```{r}
+# srednie zarobki w wojewodztwie
+
+srednie_zarobki_wojewodztwa <- dane_bez_sf %>% group_by(wojewodztwo) %>%
+  summarise(srednie_zarobki = mean(wynag))
+
+```
+
+
+
+```{r}
+ggplot(dane_bez_sf,aes(wojewodztwo))+
+  geom_bar() + 
+  ylab("Rozwody")+
+  theme(axis.text.x=element_text(angle =- 90, vjust = 0.5))
+```
+
+
+
+```{r}
+ggplot(srednie_zarobki_wojewodztwa,aes(wojewodztwo,srednie_zarobki,group =1)) +
+  geom_point(aes(y = srednie_zarobki_wojewodztwa$srednie_zarobki))+
+  geom_line()+
+  ylab("Średnie zarobki")+
+  theme(axis.text.x=element_text(angle =- 90, vjust = 0.5))
+```
+
+
+#Liczba rozwodów a wynagrodzenie
+```{r}
+ggplot(dane_bez_sf,aes(x =rozwody, y= wynag)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między liczbą rozwodów a przeciętnym wynagrodzeniem brutto", x= "liczba rozwodów", y = "przeciętne wynag brutto")
+cor.test(dane_bez_sf$rozwody, dane_bez_sf$wynag)
+```
+
+#Liczba rozwodów a pracujący w poszczególnych sekcjach
+```{r}
+
+#korelacja z rolnictwem
+
+ggplot(dane_bez_sf,aes(x =rozwody, y= rolnic)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między liczbą rozwodów a liczbą zatrudnionych w rolnictwie", x= "liczba rozwodów", y = "zatrudnienie w rolnictwie")
+cor.test(dane_bez_sf$rozwody, dane_bez_sf$rolnic)
+```
+
+```{r}
+
+#korelacja z przemysłem
+
+ggplot(dane_bez_sf,aes(x =rozwody, y= przem)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między liczbą rozwodów a liczbą zatrudnionych w przemyśle", x= "liczba rozwodów", y = "zatrudnienie w przemyśle")
+cor.test(dane_bez_sf$rozwody, dane_bez_sf$przem)
+```
+
+```{r}
+
+#korelacja z handlem
+
+ggplot(dane_bez_sf,aes(x =rozwody, y= handel)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między liczbą rozwodów a liczbą zatrudnionych w handlu", x= "liczba rozwodów", y = "zatrudnienie w handlu")
+cor.test(dane_bez_sf$rozwody, dane_bez_sf$handel)
+```
+
+
+```{r}
+
+#korelacja z finansami
+
+ggplot(dane_bez_sf,aes(x =rozwody, y= finans)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między liczbą rozwodów a liczbą zatrudnionych w finansach", x= "liczba rozwodów", y = "zatrudnienie w finansach")
+cor.test(dane_bez_sf$rozwody, dane_bez_sf$finans)
+```
+
+
+
+```{r}
+
+#korelacja z pozostałymi usługami
+
+ggplot(dane_bez_sf,aes(x =rozwody, y= poz_usl)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między liczbą rozwodów a liczbą zatrudnionych w pozostałych usługach", x= "liczba rozwodów", y = "zatrudnienie w pozostałych usługach")
+cor.test(dane_bez_sf$rozwody, dane_bez_sf$poz_usl)
+```
+
+
+#Liczba rozwodów a liczba absolwentów
+```{r}
+
+#korelacja z liczbą absolwentów
+
+ggplot(dane_bez_sf,aes(x =rozwody, y= absol)) +
+  geom_point(size = 2) + geom_smooth(method = lm) +
+labs(title = "Korelacja między liczbą rozwodów a liczbą absolwentów", x= "liczba rozwodów", y = "liczba absolwentów")
+cor.test(dane_bez_sf$rozwody, dane_bez_sf$absol)
+```
