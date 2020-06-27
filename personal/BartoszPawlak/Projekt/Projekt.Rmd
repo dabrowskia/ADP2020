@@ -1,0 +1,166 @@
+---
+title: "Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w latach 2017-2018"
+author: "Budny Michał, Pawlak Bartosz"
+date: "14 Czerwiec 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyverse)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(tmap)
+library(leaflet)
+library(mapview)
+library(ggplot2)
+library(ggspatial)
+library(shiny)
+
+dane_mieszkan_rynek_wlkp = read.csv("rynek_wlkp.csv", sep = ";", encoding = "UTF-8", header = TRUE);
+```
+
+## Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego
+### Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w roku 2017
+```{r}
+ggplot(dane_mieszkan_rynek_wlkp,
+  aes(x=as.factor(Nazwa),
+  y=as.factor(ogółem.ogółem.2017..zł.))) +
+  geom_col(fill = "red", colour = "black") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = 'Średnia cena za 1 m2 mieszkania w roku 2017', 
+       x= "Powiat", 
+       y = "Cena za m2")
+```
+# Najdrozsze ceny mieszkan w roku 2017 znajdowaly sie w powiecie miasta Poznan (ok. 5812 zl za 1m2), najtansze ceny mieszkan w roku 2017 znajdowaly sie w powiecie Kaliskim (ok. 1548 zl za 1m2)
+
+### Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w roku 2018
+```{r}
+ggplot(dane_mieszkan_rynek_wlkp,
+  aes(x=as.factor(Nazwa),
+  y=as.factor(ogółem.ogółem.2018..zł.))) +
+  geom_col(fill = "green", colour = "black") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = 'Średnia cena za 1 m2 mieszkania w roku 2018', 
+       x= "Powiat", 
+       y = "Cena za m2")
+```
+# Najdrozsze ceny mieszkan w roku 2018 znajdowaly się rowniez w powiecie miasta Poznan (ok. 6147 zl za 1m2), rowniez najtansze ceny mieszkan w roku 2018 znajdowaly sie w powiecie Kaliskim (ok. 2106 zl za 1m2)
+
+## Pobieranie danych, wizualizacja analizy strefowej dla Polski
+```{r warning=FALSE}
+DEM.Poland <-getData('alt', country='POL', mask=TRUE)
+
+powiaty <- st_read(".../Powiaty.shp", stringsAsFactors = F)
+
+plot(powiaty)
+```
+# W nastepnych etapach projektu wykorzystany zostanie "powiaty$JPT_KOD_JE"
+
+## Podział administracyjny Polski
+``` {r}
+powiaty$JPT_KOD_JE <- as.numeric(powiaty$JPT_KOD_JE)
+powiaty.transformed <- st_transform(powiaty, 4326)
+powiaty.rasterized <- rasterize(powiaty.transformed, DEM.Poland,
+                                field = 'JPT_KOD_JE', fun = mean)
+
+plot(powiaty.rasterized)
+```
+# W nastepnych etapach projektu wykorzystamy ta wizualizacje do stworzenia wizualizacji województwa wielkopolskiego
+
+## Podział administracyjny wojewodztw (z wysokoscia nad poziomem morza)
+``` {r}
+powiaty$JPT_KOD_JE <- as.numeric(powiaty$JPT_KOD_JE)
+powiaty.transformed <- st_transform(powiaty, 4326)
+powiaty.rasterized <- rasterize(powiaty.transformed, DEM.Poland, 
+                                field = 'JPT_KOD_JE', fun = min)
+powiaty.zone <- zonal(DEM.Poland, powiaty.rasterized, fun = mean)
+powiaty3 <- left_join(powiaty.transformed, as.data.frame(powiaty.zone), 
+                      by=c('JPT_KOD_JE'='zone'))
+ggplot()+geom_sf(data = powiaty3, aes(fill=value)) + 
+  annotation_scale(location = "bl", width_hint = 0.3) + 
+  scale_fill_gradientn(colours = terrain.colors(20))
+```
+
+## Mapa powiatowa województwa wielkopolskiego z centroidami
+``` {r}
+wielkopolska_powiaty <- powiaty %>% filter(JPT_KOD_JE >= 3000 & JPT_KOD_JE < 3200)
+wielkopolska_powiaty <- st_make_valid(wielkopolska_powiaty)
+wielkopolska_centroidy <- tm_shape(wielkopolska_powiaty) + tm_polygons() + tm_shape(st_centroid(wielkopolska_powiaty)) + 
+  tm_dots(size = 0.05, col = "black")
+
+wielkopolska_centroidy
+```
+# Wizualizacja wojewodztwa wielkopolskiego zostanie wykorzystana do wizualizacji cen mieszkan na rynku pierwotnym i wtórnym 
+
+## Mapa wysokościowa województwa wielkopolskiego
+```{r}
+wielkopolska_powiaty$JPT_KOD_JE <- as.numeric(wielkopolska_powiaty$JPT_KOD_JE)
+wielkopolska_powiaty.transformed <- st_transform(wielkopolska_powiaty, 4326)
+wielkopolska_powiaty.rasterized <- rasterize(wielkopolska_powiaty.transformed, DEM.Poland, field = 'JPT_KOD_JE')
+wielkopolska_wysokosc <- tm_shape(wielkopolska_powiaty.rasterized) + tm_raster()
+
+wielkopolska_wysokosc
+```
+
+## Ceny mieszkań na rynku pierwotnym i wtórnym
+### Ceny mieszkań na rynku pierwotnym i wtórnym w 2017 roku
+```{r warning=FALSE}
+# prepare data
+dane_mieszkan_rynek_wlkp <- dane_mieszkan_rynek_wlkp %>% mutate(JPT_KOD_JE = as.numeric(.$Kod / 1000))
+cena_mieszkan_rynek_wlkp <- wielkopolska_powiaty %>% left_join(dane_mieszkan_rynek_wlkp)
+
+
+map_wlkp_legend = expression("Cena mieszkan (za 1m"^2*")")
+
+map_wlkp_rynek_pierwotny <- tm_shape(cena_mieszkan_rynek_wlkp) +
+  tm_fill(col = "rynek.pierwotny.ogółem.2017..zł.",
+          title = map_wlkp_legend,
+          palette = "Reds",
+          style = "pretty",
+          n = 10) +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek pierwotny")
+
+map_wlkp_rynek_wtorny <- tm_shape(cena_mieszkan_rynek_wlkp) +
+  tm_fill(col = "rynek.wtórny.ogółem.2017..zł.",
+          title = map_wlkp_legend,
+          palette = "Greens",
+          style = "pretty",
+          n = 10) +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek wtórny")
+
+tmap_arrange(map_wlkp_rynek_pierwotny, map_wlkp_rynek_wtorny)
+```
+# Wizualizacja cen mieszkań na rynku pierwotnym i wtórnym w 2017 roku potwierdza, ze najdrozsze ceny mieszkan w roku 2017 znajdowaly sie w powiecie miasta Poznan, najtansze ceny mieszkan w roku 2017 znajdowaly sie w powiecie Kaliskim
+
+### Ceny mieszkań na rynku pierwotnym i wtórnym w 2018 roku
+``` {r}
+map_wlkp_legend = expression("Cena mieszkan (za 1m"^2*")")
+
+map_wlkp_rynek_pierwotny <- tm_shape(cena_mieszkan_rynek_wlkp) +
+  tm_fill(col = "rynek.pierwotny.ogółem.2018..zł.",
+          title = map_wlkp_legend,
+          palette = "Reds",
+          style = "pretty",
+          n = 10) +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek pierwotny")
+
+map_wlkp_rynek_wtorny <- tm_shape(cena_mieszkan_rynek_wlkp) +
+  tm_fill(col = "rynek.wtórny.ogółem.2018..zł.",
+          title = map_wlkp_legend,
+          palette = "Greens",
+          style = "pretty",
+          n = 10) +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek wtórny")
+
+tmap_arrange(map_wlkp_rynek_pierwotny, map_wlkp_rynek_wtorny)
+```
+# Wizualizacja cen mieszkań na rynku pierwotnym i wtórnym w 2018 roku potwierdza, ze najdrozsze ceny mieszkan w roku 2018 znajdowaly sie w powiecie miasta Poznan, najtansze ceny mieszkan w roku 2018 znajdowaly sie w powiecie Kaliskim
