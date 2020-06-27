@@ -32,9 +32,9 @@ Wyświetlcie mapę krajów Europejskich  wg liczby ludności
 Który kraj posiada najmniejszą liczbę ludności i ile wynosi?
 ```{r}
 world %>%
-select(pop,name_long)%>%
+select(pop, name_long)%>%
 arrange(pop) -> posortowane
-head(posortowane,1)
+head(posortowane, 1)
 ```
 
 ## Zadanie 3
@@ -42,7 +42,7 @@ head(posortowane,1)
 Ile krajów znajduje się w Azji?
 
 ```{r}
-world1=subset(world,continent == 'Asia')
+world1 <- subset(world, continent == 'Asia')
 nrow(world1)
 
 ```
@@ -53,7 +53,7 @@ Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign 
 
 ```{r}
 worldSlov<- world %>%
-filter(type == "Sovereign country")
+  filter(type == "Sovereign country")
 ggplot(worldSlov, aes(x = area_km2)) +
 geom_histogram()
 
@@ -75,9 +75,9 @@ geom_point()
 Jaka jest maksymalna wysokość w danym obrazie rastrowym?
 
 ```{r}
-##raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
-##new_raster = raster(raster_filepath)
-##max(new_master[],na.rm = NA)
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+new_raster = raster(raster_filepath)
+max(new_master[],na.rm = NA)
 
 ```
 
