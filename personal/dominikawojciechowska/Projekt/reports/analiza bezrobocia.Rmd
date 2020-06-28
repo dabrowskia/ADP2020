@@ -1,0 +1,160 @@
+---
+title: "Analiza bezrobocia w poszczególnych powiatach na terenie Polski"
+author: "Katarzyna Owczarek, Dominika Wojciechowska"
+date: "17 06 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message=FALSE, warning=FALSE)
+```
+
+
+### Wczytywanie i przygotowanie danych
+
+Dane niezbędne do wykonania analizy zostały pobrane z Banku Danych Lokalnych. Dane przedstawiają liczbę osób bezrobotnych zarejestrowanych ogółem, liczbę ludności oraz liczbę przestępstw stwierdzonych przez policję. Analiza została wykonana na podstawie danych dotyczących roku 2019. Natomiast szczegółowość danych jest na poziomie powiatów. Na liczbę osób bezrobotnych składa się całkowita liczba zarejestrowanych osób bezrobotnych bez względu na czas pozostawania bez pracy. 
+
+```{r}
+library(dplyr)
+library(sf)
+library(raster)
+library(tidyverse)
+library(spData)
+library(spDataLarge)
+#library(tmap)    # for static and interactive maps
+#library(leaflet) # for interactive maps
+#library(mapview) # for interactive maps
+library(ggplot2) # tidyverse vis package
+library(shiny)   # for web applications
+library(readxl)
+```
+
+
+
+
+```{r}
+powiaty <- st_read( dsn = '../../../../../../Desktop/data/jednostki_organizacyjne/Powiaty.shp')
+
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+
+bezrobotni <- readxl::read_xlsx('../data/Bezrobotni zarejestrowani 2019.xlsx', sheet = 2)
+
+ludnosc <- readxl::read_xlsx('../data/Ludność 2019.xlsx', sheet = 2)
+
+przestepstwa <- readxl::read_xlsx('../data/Przestępstwa stwierdzone przez Policję w zakończonych postępowaniach przygotowawczych 2019.xlsx', sheet = 2)
+
+
+df_bezrobotni <-  powiaty %>% 
+  left_join(bezrobotni, 
+            by = c('JPT_KOD_JE' = 'Kod'))
+
+df_bezrobotni_ludnosc <- df_bezrobotni %>% 
+  left_join(ludnosc, 
+            by = c('JPT_KOD_JE' = 'Kod'))
+
+df_bezrobotni_ludnosc_przestepstwa <- df_bezrobotni_ludnosc %>% 
+  left_join(przestepstwa, 
+            by = c('JPT_KOD_JE' = 'Kod'))
+
+
+dane <- df_bezrobotni_ludnosc_przestepstwa %>%
+  dplyr::select('Nazwa.x', 'Ludnosc', 'Bezrobotni', "Przestepstwa")
+
+```
+
+### Wizualizacja danych
+
+Dodana została nowa kolumna, która umożliwia zwizualizowanie procentowego udziału osób bezrobotnych w całkowitej liczbie ludności na poziomie powiatów. Nowa zmienna "Procent_bezrobocia" jest ilorazem liczby bezrobotnych oraz całkowitej liczby ludności wyrażonym w procentach. 
+
+```{r}
+# Dodanie nowej zmiennej
+
+
+dane_wizualizacja <- dplyr::mutate(dane, Procent_bezrobocia = (Bezrobotni / Ludnosc * 100))
+
+
+ggplot()+
+  geom_sf(data = dane_wizualizacja, aes(fill = Procent_bezrobocia)) + 
+  scale_fill_gradientn(colors = terrain.colors(30))  +
+  labs(title = "Mapa Polski z podziałem na powiaty uwzględniająca procent bezrobocia", 
+       fill = "Procentowy udział osób bezrobotnych") 
+      
+```
+
+### Powiaty z największym i najmniejszym procentowym udziałem
+
+```{r}
+dane_analiza <- na.omit(dane_wizualizacja)
+
+powiaty_max_procent <- dane_analiza %>% 
+  dplyr::arrange(desc(dane_analiza$Procent_bezrobocia)) %>% 
+  head(5) 
+
+powiaty_max_procent 
+
+powiaty_min_procent <- dane_analiza %>% 
+  dplyr::arrange(desc(dane_analiza$Procent_bezrobocia)) %>% 
+  tail(5) 
+
+ggplot(powiaty_max_procent,
+      aes(x = powiaty_max_procent$Nazwa.x,
+          y = powiaty_max_procent$Procent_bezrobocia)) + 
+  geom_col() +
+  labs(title = 'Powiaty z największym bezrobociem', 
+       x= "", 
+       y = "Procent bezrobocia")
+
+ggplot(powiaty_min_procent,
+      aes(x = powiaty_min_procent$Nazwa.x,
+          y = powiaty_min_procent$Procent_bezrobocia)) + 
+  geom_col() +
+  labs(title = 'Powiaty z najmniejszym bezrobociem', 
+       x= "", 
+       y = "Procent bezrobocia")
+
+
+ggplot()+
+  geom_sf(data = powiaty) + 
+  geom_sf(data = powiaty_max_procent, aes(fill = Procent_bezrobocia)) + 
+  scale_fill_gradientn(colors = topo.colors(5))  +
+  labs(title = "Mapa Polski z zaznaczonymi pięcioma powiatami z największym bezrobociem", 
+       fill = "Procentowy udział osób bezrobotnych")
+
+ggplot()+
+  geom_sf(data = powiaty) + 
+  geom_sf(data = powiaty_min_procent, aes(fill = Procent_bezrobocia)) + 
+  scale_fill_gradientn(colors = topo.colors(5))  +
+  labs(title ="Mapa Polski z zaznaczonymi pięcioma powiatami z najmniejszym bezrobociem", 
+       fill = "Procentowy udział osób bezrobotnych")
+
+```
+
+Powiat, który ma najsłabszy wynik pod względem procentowego udziału osób bezrobotnych jest powiat szydłowiecki, w którym udział ten wynosi aż 8,38 punktów procentowych. W czołówce powiatów z największym procentem bezrobocia znalazły się też powiat przysuski, leski, radziejowski, brzoski. 
+
+Powiatem, w którym występuje najmniejszy procent bezrobocia jest powiat kołobrzeski, gdzie procent ten wynosi zaledwie 0.43 punkta procentowego. Niewielki procent bezrobocia występuje też w powiecie poznańskim, powiecie miasta Poznanie, powiecie bieruńsko-lędzińskim oraz śremskim. Zatem aż trzy wielkopolskie powiaty znalazły się w zestawieniu pięciu powiatóW z najmniejszym procentem bezrobocia. 
+
+
+
+### Badanie zależności między liczbą osób bezrobotnych a liczbą przestępstw
+
+Analiza korelacji między liczbą osób bezrobotnych a liczbą przestępstw.
+
+```{r}
+ggplot(dane_analiza, aes(x = Bezrobotni, y = Przestepstwa)) + 
+  geom_point(size = 3) + 
+  geom_smooth(method = lm) +
+  labs(title = "Korelacja między liczbą osób bezrobotnych a liczbą przestępstw", 
+       x= "Liczba osób bezrobotnych", 
+       y = "Liczba przestępstw")
+
+```
+
+-
+```{r}
+cor.test(dane_analiza$Bezrobotni,dane_analiza$Przestepstwa)
+```
+
+Współczynnik Pearsona został wykorzystany, aby zbadać zależność między liczbą osób bezrobotnych a liczbą przestępstw. Wartość współczynnika Pearsona wynosi około 0,64. Zależność między zmiennymi mieści się w teoretycznym przedziale 0,5 – 0,7. Znak przy współczynniku Pearsona jest dodatni, więc zależność jest wprost proporcjonalna. Oznacza to, że im większa jest liczba osób bezrobotnych, tym większa liczba przestępstw. Dodatkowo p-wartość (p-value) jest mniejsza niż 0,05, zatem zmienna objaśniająca (przestępstwa) jest istotna.
+
+
+
