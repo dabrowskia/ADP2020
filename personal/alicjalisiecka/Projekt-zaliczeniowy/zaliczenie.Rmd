@@ -23,7 +23,7 @@ Dane, które zostały wykorzystane do przeprowadzenia analizy pochodzą z Banku 
 ## Przygotowanie danych
 
 ```{r}
-powiaty <- st_read(dsn = 'C:/Users/Alicja/Desktop/Dane projekt zaliczeniowy/PRG_jednostki_administracyjne_v40_SZPRG/Powiaty.shp')
+powiaty <- st_read(dsn  = './dane/PRG_jednostki_administracyjne_v40_SZPRG/Powiaty.shp')
 
 y_rozwody <- readxl::read_xlsx('dane/rozwody.xlsx', sheet = 2)
 

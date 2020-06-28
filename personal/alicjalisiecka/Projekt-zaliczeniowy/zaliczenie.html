@@ -190,8 +190,8 @@ summary {
 </div>
 <div id="przygotowanie-danych" class="section level2">
 <h2>Przygotowanie danych</h2>
-<pre class="r"><code>powiaty &lt;- st_read(dsn = 'C:/Users/Alicja/Desktop/Dane projekt zaliczeniowy/PRG_jednostki_administracyjne_v40_SZPRG/Powiaty.shp')</code></pre>
-<pre><code>## Reading layer `Powiaty' from data source `C:\Users\Alicja\Desktop\Dane projekt zaliczeniowy\PRG_jednostki_administracyjne_v40_SZPRG\Powiaty.shp' using driver `ESRI Shapefile'
+<pre class="r"><code>powiaty &lt;- st_read(dsn  = './dane/PRG_jednostki_administracyjne_v40_SZPRG/Powiaty.shp')</code></pre>
+<pre><code>## Reading layer `Powiaty' from data source `C:\Users\Alicja\Documents\ADP2020\personal\alicjalisiecka\Projekt-zaliczeniowy\dane\PRG_jednostki_administracyjne_v40_SZPRG\Powiaty.shp' using driver `ESRI Shapefile'
 ## Simple feature collection with 380 features and 29 fields
 ## geometry type:  MULTIPOLYGON
 ## dimension:      XY
@@ -431,7 +431,7 @@ corrplot(macierz_korelacji, method = &quot;circle&quot; )</code></pre>
 ##     .External(C_devoff, as.integer(which))
 ##     dev.cur()
 ## }
-## &lt;bytecode: 0x03418278&gt;
+## &lt;bytecode: 0x02c26428&gt;
 ## &lt;environment: namespace:grDevices&gt;</code></pre>
 <pre class="r"><code># duza dodatnia korelacja miedzy liczba rozwodow a iloscia absolwentów
 # mała dodatnia korelacja miedzy liczbą rozwodów a wynagrodzeniem 
