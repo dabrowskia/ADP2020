@@ -23,7 +23,7 @@ Dane, które zostały wykorzystane do przeprowadzenia analizy pochodzą z Banku 
 ## Przygotowanie danych
 
 ```{r}
-powiaty <- st_read( dsn = 'C:/Users/Alicja/Desktop/Dane projekt zaliczeniowy/PRG_jednostki_administracyjne_v40_SZPRG/Powiaty.shp')
+powiaty <- st_read(dsn = 'C:/Users/Alicja/Desktop/Dane projekt zaliczeniowy/PRG_jednostki_administracyjne_v40_SZPRG/Powiaty.shp')
 
 y_rozwody <- readxl::read_xlsx('dane/rozwody.xlsx', sheet = 2)
 
@@ -216,7 +216,7 @@ dane_bez_sf<-merge(dane_bez_sf,wojewodztwa,by = "woj",all.x = TRUE)
 ```{r}
 # srednie zarobki w wojewodztwie
 
-srednie_zarobki_wojewodztwa <- dane_bez_sf %>% group_by(wojewodztwo) %>%
+srednie_zarobki_wojewodztwa <- dane_bez_sf %>% group_by(woj) %>%
   summarise(srednie_zarobki = mean(wynag))
 
 ```
@@ -224,7 +224,7 @@ srednie_zarobki_wojewodztwa <- dane_bez_sf %>% group_by(wojewodztwo) %>%
 
 
 ```{r}
-ggplot(dane_bez_sf,aes(wojewodztwo))+
+ggplot(dane_bez_sf,aes(woj))+
   geom_bar() + 
   ylab("Rozwody")+
   theme(axis.text.x=element_text(angle =- 90, vjust = 0.5))
@@ -233,7 +233,7 @@ ggplot(dane_bez_sf,aes(wojewodztwo))+
 
 
 ```{r}
-ggplot(srednie_zarobki_wojewodztwa,aes(wojewodztwo,srednie_zarobki,group =1)) +
+ggplot(srednie_zarobki_wojewodztwa,aes(woj,srednie_zarobki,group =1)) +
   geom_point(aes(y = srednie_zarobki_wojewodztwa$srednie_zarobki))+
   geom_line()+
   ylab("Średnie zarobki")+
