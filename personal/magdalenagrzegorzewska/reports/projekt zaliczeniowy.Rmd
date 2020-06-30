@@ -8,6 +8,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(rlang)
 library(spData)
 library(dplyr)
 library(ggplot2)
@@ -16,10 +17,11 @@ library(plotly)
 library(corrplot)
 library(viridis)
 library(tmap)
+
 ```
 
 ## Projekt zaliczeniowy
-##Porównanie wynagrodzeń w latach 2003, 2004 i 2005. Celem jest zbadanie wpływu wejscia Polski do Uni Europejskiej. 
+## Porównanie srednich wynagrodzeń w latach 2003, 2004 i 2005. Celem jest zbadanie wpływu wejscia Polski do Uni Europejskiej. 
 
 ```{r}
 powiaty <- st_read(dsn = 'j:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/Powiaty.shp')
@@ -95,14 +97,11 @@ Dane
 ## Wykresy przedstwiające średnie wynagrodzenie w województwach w poszczególnych latach
 
 ```{r , echo=FALSE}
-ggplot(wynagrodzeniewojewodztwa, aes(x = rok2003, y=Nazwa)) +
-  geom_point() 
 
-ggplot(wynagrodzeniewojewodztwa, aes(x = rok2004, y=Nazwa)) +
-  geom_point() 
-
-ggplot(wynagrodzeniewojewodztwa, aes(x = rok2005, y=Nazwa)) +
-  geom_point() 
+ggplot() +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2003, y=Nazwa,col="2003")) +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2004, y=Nazwa,col="2004")) +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2005, y=Nazwa,col="2005"))
 
 ```
 
@@ -127,29 +126,10 @@ wynagrodzeniewojewodztwa
 
 ```
 
-
-## Kartogramy
-
-```{r , echo=FALSE}
-
-a <- tm_shape(daneWojewodztwa) + 
-    tm_polygons(col = "JPT_NAZWA_",
-              title = "Województwa", 
-              palette = "Set2") +
-    tm_format("NLD", title="Kartogram województw", bg.color="white")
-
-b <- tm_shape(dane) + 
-    tm_polygons(col = "JPT_NAZWA_",
-              title = "Powiaty", 
-              palette = "Set2") +
-  tm_format("NLD", title="Kartogram powiatów", bg.color="white")
-
-tmap_arrange(a, b) 
-
-```
+W tabeli została przedstawiona różnica średnich wynagrodzeń miedzy rokiem 2003 i 2004. Została ona zawarta w kolumnie "roznica" oraz różnica miedzy rokiem 2004 i 2005. Zostało to przedstawione w kolumnie "roznica2". W wierszu z województwem Dolnośląskim, gdzie średnio najszybciej wzrastają płace, różnica miedzy zwyżkami pensji wynosi tylko 2 zł. Różnice miedzy wzrostem wynagrodzeń w kolejnych latach nie róznią się drastycznie. W niektórych województach jest to nawet mniejszy wzrost, niż w roku poprzednim.
 
 
-```{r fig.cap = "Wykres 1", echo = FALSE}
+```{r , echo = FALSE}
 #wykresy
 wynagrodzenia %>% 
   select(Nazwa, rok2003) %>% 
@@ -165,7 +145,9 @@ wynagrodzenia %>%
 
 
 ```
-```{r fig.cap = "Wykres 2", echo = FALSE}
+
+
+```{r , echo = FALSE}
 wynagrodzenia %>% 
   select(Nazwa, rok2003) %>% 
   arrange(-rok2003) %>% 
@@ -180,7 +162,7 @@ wynagrodzenia %>%
 ```
 
 
-```{r fig.cap = "Wykres 3", echo = FALSE}
+```{r , echo = FALSE}
 #wykresy
 wynagrodzenia %>% 
   select(Nazwa, rok2004) %>% 
@@ -198,7 +180,7 @@ wynagrodzenia %>%
  
 
 
-```{r fig.cap = "Wykres 4", echo = FALSE}
+```{r , echo = FALSE}
 wynagrodzenia %>% 
   select(Nazwa, rok2004) %>% 
   arrange(-rok2004) %>% 
@@ -216,7 +198,7 @@ wynagrodzenia %>%
 
 
 
-```{r fig.cap = "Wykres 5", echo = FALSE}
+```{r , echo = FALSE}
 #wykresy
 wynagrodzenia %>% 
   select(Nazwa, rok2005) %>% 
@@ -233,7 +215,7 @@ wynagrodzenia %>%
 
  
 
-```{r fig.cap = "Wykres 6", echo = FALSE}
+```{r , echo = FALSE}
 wynagrodzenia %>% 
   select(Nazwa, rok2005) %>% 
   arrange(-rok2005) %>% 
@@ -247,6 +229,6 @@ wynagrodzenia %>%
   coord_flip()
 ```
 
-Z analizy wynoika, że wejscie do UE nie miało wpływu na średnie wynagrodzenie brutto.
+## Z analizy wynika, że wejscie do UE nie miało wpływu na średnie wynagrodzenie brutto.
 
-
+Na wykresach możemy zauważyć, że średnia pensja rosła praktycznie taką samą kwotę co przed wejściem do UE.
