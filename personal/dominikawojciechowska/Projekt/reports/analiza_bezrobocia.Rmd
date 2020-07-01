@@ -70,7 +70,7 @@ Dodana została nowa kolumna, która umożliwia zwizualizowanie procentowego udz
 # Dodanie nowej zmiennej
 
 
-dane_wizualizacja <- dplyr::mutate(dane, Procent_bezrobocia = (Bezrobotni / Ludnosc * 100))
+dane_wizualizacja <- dplyr::mutate(dane, Procent_bezrobocia = (100 * Bezrobotni / Ludnosc))
 
 
 ggplot()+
@@ -96,8 +96,10 @@ powiaty_min_procent <- dane_analiza %>%
   dplyr::arrange(desc(dane_analiza$Procent_bezrobocia)) %>% 
   tail(5) 
 
+powiaty_min_procent 
+
 ggplot(powiaty_max_procent,
-      aes(x = powiaty_max_procent$Nazwa.x,
+      aes(x = reorder(powiaty_max_procent$Nazwa.x, powiaty_max_procent$Procent_bezrobocia),
           y = powiaty_max_procent$Procent_bezrobocia)) + 
   geom_col() +
   labs(title = 'Powiaty z największym bezrobociem', 
@@ -105,7 +107,7 @@ ggplot(powiaty_max_procent,
        y = "Procent bezrobocia")
 
 ggplot(powiaty_min_procent,
-      aes(x = powiaty_min_procent$Nazwa.x,
+      aes(x = reorder(powiaty_min_procent$Nazwa.x,powiaty_min_procent$Procent_bezrobocia),
           y = powiaty_min_procent$Procent_bezrobocia)) + 
   geom_col() +
   labs(title = 'Powiaty z najmniejszym bezrobociem', 
@@ -115,17 +117,15 @@ ggplot(powiaty_min_procent,
 
 ggplot()+
   geom_sf(data = powiaty) + 
-  geom_sf(data = powiaty_max_procent, aes(fill = Procent_bezrobocia)) + 
-  scale_fill_gradientn(colors = topo.colors(5))  +
-  labs(title = "Mapa Polski z zaznaczonymi pięcioma powiatami z największym bezrobociem", 
-       fill = "Procentowy udział osób bezrobotnych")
+  geom_sf(data = powiaty_max_procent, aes(fill = "darkred"), 
+          show.legend = FALSE) +
+  labs(title = "Mapa Polski z zaznaczonymi pięcioma powiatami z największym bezrobociem")
 
 ggplot()+
   geom_sf(data = powiaty) + 
-  geom_sf(data = powiaty_min_procent, aes(fill = Procent_bezrobocia)) + 
-  scale_fill_gradientn(colors = topo.colors(5))  +
-  labs(title ="Mapa Polski z zaznaczonymi pięcioma powiatami z najmniejszym bezrobociem", 
-       fill = "Procentowy udział osób bezrobotnych")
+  geom_sf(data = powiaty_min_procent, aes(fill = "darkred"),
+          show.legend = FALSE) +
+  labs(title ="Mapa Polski z zaznaczonymi pięcioma powiatami z najmniejszym bezrobociem")
 
 ```
 
@@ -137,24 +137,36 @@ Powiatem, w którym występuje najmniejszy procent bezrobocia jest powiat kołob
 
 ### Badanie zależności między liczbą osób bezrobotnych a liczbą przestępstw
 
-Analiza korelacji między liczbą osób bezrobotnych a liczbą przestępstw.
+Sprawdzenie czy występuje korelacja między udziałem osób bezrobotnych a udziałem przestępstw.
 
 ```{r}
-ggplot(dane_analiza, aes(x = Bezrobotni, y = Przestepstwa)) + 
+#Przygotowanie danych 
+
+dane_korelacja <- dplyr::mutate(dane_analiza, udzial_bezrobotnych = (100 * Bezrobotni / Ludnosc), udzial_przestepstw = (100 * Przestepstwa / Ludnosc))
+
+
+```
+
+
+
+```{r}
+ggplot(dane_korelacja, aes(x = udzial_bezrobotnych, y = udzial_przestepstw)) + 
   geom_point(size = 3) + 
   geom_smooth(method = lm) +
-  labs(title = "Korelacja między liczbą osób bezrobotnych a liczbą przestępstw", 
-       x= "Liczba osób bezrobotnych", 
-       y = "Liczba przestępstw")
+  labs(title = "Zależność między liczbą osób bezrobotnych a liczbą przestępstw", 
+       x= "Udział osób bezrobotnych", 
+       y = "Udział przestępstw")
 
 ```
 
 -
 ```{r}
-cor.test(dane_analiza$Bezrobotni,dane_analiza$Przestepstwa)
+cor.test(dane_korelacja$udzial_bezrobotnych, dane_korelacja$udzial_przestepstw)
 ```
 
-Współczynnik Pearsona został wykorzystany, aby zbadać zależność między liczbą osób bezrobotnych a liczbą przestępstw. Wartość współczynnika Pearsona wynosi około 0,64. Zależność między zmiennymi mieści się w teoretycznym przedziale 0,5 – 0,7. Znak przy współczynniku Pearsona jest dodatni, więc zależność jest wprost proporcjonalna. Oznacza to, że im większa jest liczba osób bezrobotnych, tym większa liczba przestępstw. Dodatkowo p-wartość (p-value) jest mniejsza niż 0,05, zatem zmienna objaśniająca (przestępstwa) jest istotna.
+Współczynnik Pearsona został wykorzystany, aby zbadać zależność między liczbą osób bezrobotnych a liczbą przestępstw i zweryfikować czy wysoki udział bezrobotnych jest skorelowany z wysokim udziałem przestępstw. Wartość współczynnika Pearsona wynosi około -0.28. Wartość współczynnika dla zależności między zmiennymi nie mieści się więc w teoretycznym przedziale 0,5 – 0,7. Z tego badania wynika, że udział osób bezrobotnych jest bardzo słabo skorelowany z udziałem przestępstw. Jest to spowodowane występowaniem kilku obserwacji odstających, które są widoczne na wykresie. 
+
+
 
 
 
