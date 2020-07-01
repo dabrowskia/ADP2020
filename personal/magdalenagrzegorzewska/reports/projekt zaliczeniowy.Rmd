@@ -94,16 +94,6 @@ Dane <-summary(wynagrodzeniewojewodztwa)
 Dane
 ```
 
-## Wykresy przedstwiające średnie wynagrodzenie w województwach w poszczególnych latach
-
-```{r , echo=FALSE}
-
-ggplot() +
-  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2003, y=Nazwa,col="2003")) +
-  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2004, y=Nazwa,col="2004")) +
-  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2005, y=Nazwa,col="2005"))
-
-```
 
 ## Podsumowanie danych wynagrodzen w powiatach
 
@@ -126,8 +116,22 @@ wynagrodzeniewojewodztwa
 
 ```
 
-W tabeli została przedstawiona różnica średnich wynagrodzeń miedzy rokiem 2003 i 2004. Została ona zawarta w kolumnie "roznica" oraz różnica miedzy rokiem 2004 i 2005. Zostało to przedstawione w kolumnie "roznica2". W wierszu z województwem Dolnośląskim, gdzie średnio najszybciej wzrastają płace, różnica miedzy zwyżkami pensji wynosi tylko 2 zł. Różnice miedzy wzrostem wynagrodzeń w kolejnych latach nie róznią się drastycznie. W niektórych województach jest to nawet mniejszy wzrost, niż w roku poprzednim.
+W tabeli została przedstawiona różnica średnich wynagrodzeń miedzy rokiem 2003 i 2004. Została ona zawarta w kolumnie "roznica" oraz różnica miedzy rokiem 2004 i 2005. Zostało to przedstawione w kolumnie "roznica2". W wierszu z województwem Dolnośląskim, gdzie średnio najszybciej wzrastają płace, różnica miedzy zwyżkami pensji wynosi tylko 2 zł. Różnice miedzy wzrostem wynagrodzeń w kolejnych latach nie róznią się drastycznie. W niektórych województach jest to nawet mniejszy wzrost, niż w roku poprzednim. Poniżej wykres przedstwaiający te różnice.
 
+## Wykresy przedstwiające średnie wynagrodzenie w województwach w poszczególnych latach
+
+```{r , echo=FALSE}
+
+ggplot() +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2003, y=Nazwa,col="2003")) +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2004, y=Nazwa,col="2004")) +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2005, y=Nazwa,col="2005"))
+
+```
+
+Na wykresei możemy zauważyć, że średnia pensja rosła praktycznie taką samą kwotę co przed wejściem do UE.
+
+## Wykresy przedstawiające ekstrema
 
 ```{r , echo = FALSE}
 #wykresy
@@ -231,4 +235,3 @@ wynagrodzenia %>%
 
 ## Z analizy wynika, że wejscie do UE nie miało wpływu na średnie wynagrodzenie brutto.
 
-Na wykresach możemy zauważyć, że średnia pensja rosła praktycznie taką samą kwotę co przed wejściem do UE.
