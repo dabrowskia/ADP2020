@@ -1,0 +1,237 @@
+---
+title: "Statystyki strefowe"
+author: "Agnieszka Buszta, Magdalena Grzegorzewska"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(rlang)
+library(spData)
+library(dplyr)
+library(ggplot2)
+library(sf)
+library(plotly)
+library(corrplot)
+library(viridis)
+library(tmap)
+
+```
+
+## Projekt zaliczeniowy
+## Porównanie srednich wynagrodzeń w latach 2003, 2004 i 2005. Celem jest zbadanie wpływu wejscia Polski do Uni Europejskiej. 
+
+```{r}
+powiaty <- st_read(dsn = 'j:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/Powiaty.shp')
+
+powiaty$JPT_KOD_JE <-paste0(powiaty$JPT_KOD_JE, '000')
+
+wojewodztwa <- st_read(dsn = 'j:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/Województwa.shp')
+
+wojewodztwa$JPT_KOD_JE <-paste0(wojewodztwa$JPT_KOD_JE, '00000')
+
+wynagrodzeniewojewodztwa <- readxl::read_xlsx('J:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/wynagrodzeniewojewodztwa.xlsx')
+
+wynagrodzenia <- readxl::read_xlsx('J:/Documents/ADP2020/personal/magdalenagrzegorzewska/data/wynagrodzenie.xlsx')
+```
+
+
+
+```{r pressure, echo=FALSE}
+dane <- powiaty %>%
+  left_join(wynagrodzenia, by = c('JPT_KOD_JE' = 'Kod')) 
+
+
+dane %>%
+  ggplot(aes(fill=`rok2003`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie przed wejściem Polski do UE')
+
+dane %>%
+  ggplot(aes(fill=`rok2004`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie na przełomie wejścia Polski do UE')
+
+dane %>%
+  ggplot(aes(fill=`rok2005`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie po wejściu Polski do UE')
+
+```
+
+
+
+```{r , echo=FALSE}
+daneWojewodztwa <- wojewodztwa %>%
+  left_join(wynagrodzenia, by = c('JPT_KOD_JE' = 'Kod')) 
+
+map1 <- daneWojewodztwa %>%
+  ggplot(aes(fill=`rok2003`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie 2003 przedstwaione na mapie wojewodztw')
+
+map2 <- daneWojewodztwa %>%
+  ggplot(aes(fill=`rok2004`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie 2004 przedstwaione na mapie wojewodztw')
+
+map3 <- daneWojewodztwa %>%
+  ggplot(aes(fill=`rok2005`, geometry=geometry)) +
+  geom_sf() +
+  labs(title = 'Wynagrodzenie 2005 przedstwaione na mapie wojewodztw')
+
+
+
+```
+
+## Podsumowanie wynagrodzenie w województwach
+
+
+```{r , echo=FALSE}
+Dane <-summary(wynagrodzeniewojewodztwa)
+Dane
+```
+
+
+## Podsumowanie danych wynagrodzen w powiatach
+
+
+```{r , echo=FALSE}
+Dane <-summary(wynagrodzenia)
+Dane
+
+```
+
+## Wzrost średnich wypłat
+
+```{r , echo=FALSE}
+wynagrodzeniewojewodztwa <- mutate(wynagrodzeniewojewodztwa,
+                       roznica = rok2004 - rok2003)
+wynagrodzeniewojewodztwa <- mutate(wynagrodzeniewojewodztwa,
+                       roznica2 = rok2005 - rok2004)
+
+wynagrodzeniewojewodztwa
+
+```
+
+W tabeli została przedstawiona różnica średnich wynagrodzeń miedzy rokiem 2003 i 2004. Została ona zawarta w kolumnie "roznica" oraz różnica miedzy rokiem 2004 i 2005. Zostało to przedstawione w kolumnie "roznica2". W wierszu z województwem Dolnośląskim, gdzie średnio najszybciej wzrastają płace, różnica miedzy zwyżkami pensji wynosi tylko 2 zł. Różnice miedzy wzrostem wynagrodzeń w kolejnych latach nie róznią się drastycznie. W niektórych województach jest to nawet mniejszy wzrost, niż w roku poprzednim. Poniżej wykres przedstwaiający te różnice.
+
+## Wykresy przedstwiające średnie wynagrodzenie w województwach w poszczególnych latach
+
+```{r , echo=FALSE}
+
+ggplot() +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2003, y=Nazwa,col="2003")) +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2004, y=Nazwa,col="2004")) +
+  geom_point(data=wynagrodzeniewojewodztwa, aes(x=rok2005, y=Nazwa,col="2005"))
+
+```
+
+Na wykresei możemy zauważyć, że średnia pensja rosła praktycznie taką samą kwotę co przed wejściem do UE.
+
+## Wykresy przedstawiające ekstrema
+
+```{r , echo = FALSE}
+#wykresy
+wynagrodzenia %>% 
+  select(Nazwa, rok2003) %>% 
+  arrange(-rok2003) %>% 
+  head(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, rok2003), y=rok2003)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najwyższym wynagrodzeniem w 2003 roku", 
+       subtitle = "Rok 2003",
+       y="Wynagrodzenie") +
+  coord_flip()
+
+
+```
+
+
+```{r , echo = FALSE}
+wynagrodzenia %>% 
+  select(Nazwa, rok2003) %>% 
+  arrange(-rok2003) %>% 
+  tail(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, -rok2003), y=rok2003)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najniższym wynagrodzeniem w 2003 roku", 
+       subtitle = "Rok 2003",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+
+```{r , echo = FALSE}
+#wykresy
+wynagrodzenia %>% 
+  select(Nazwa, rok2004) %>% 
+  arrange(-rok2004) %>% 
+  head(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, rok2004), y=rok2004)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najwyższym wynagrodzeniem w 2004 roku", 
+       subtitle = "Rok 2004",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+ 
+
+
+```{r , echo = FALSE}
+wynagrodzenia %>% 
+  select(Nazwa, rok2004) %>% 
+  arrange(-rok2004) %>% 
+  tail(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, -rok2004), y=rok2004)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najniższym wynagrodzeniem w 2004 roku", 
+       subtitle = "Rok 2004",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+ 
+
+
+
+```{r , echo = FALSE}
+#wykresy
+wynagrodzenia %>% 
+  select(Nazwa, rok2005) %>% 
+  arrange(-rok2005) %>% 
+  head(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, rok2005), y=rok2005)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najwyższym wynagrodzeniem w 2005 roku", 
+       subtitle = "Rok 2005",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+ 
+
+```{r , echo = FALSE}
+wynagrodzenia %>% 
+  select(Nazwa, rok2005) %>% 
+  arrange(-rok2005) %>% 
+  tail(10) %>% 
+  ggplot(aes(x=reorder(Nazwa, -rok2005), y=rok2005)) +
+  geom_bar(stat = "identity") +
+  theme(legend.position = "none", axis.title.y = element_blank()) +
+  labs(title = "10 powiatów z najniższym wynagrodzeniem w 2005 roku", 
+       subtitle = "Rok 2005",
+       y="Wynagrodzenie") +
+  coord_flip()
+```
+
+## Z analizy wynika, że wejscie do UE nie miało wpływu na średnie wynagrodzenie brutto.
+
