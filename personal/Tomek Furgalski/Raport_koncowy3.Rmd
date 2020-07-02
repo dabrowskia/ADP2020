@@ -1,8 +1,13 @@
 ---
-title: "Narzędzie dla inwestora do przewidywania ile kin powinno funkcjonować w danym powiecie na podstawie  ilości klubów sportowych, ilości trenerów i ilości osób ćwiczących . "
+title: 'Narzędzie dla inwestora do przewidywania ile kin powinno funkcjonować w danym
+  powiecie na podstawie  ilości klubów sportowych, ilości trenerów i ilości osób ćwiczących.
+  Warości ilości służących predykcji zostały znormalizowane wielkościa populacji w
+  danym powiecie. '
 author: "Dariusz Ratajczak i Tomasz Furgalski"
 date: "22 06 2020"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 Gdyby istniały zależności liniowe między ilością klubów, ilością treneróW, iloscią ćwiczących w klubach a ilością kin w powiecie, raport przedstawi możliwość wykorzystania tych zależnosci, dla przewidywania celowości inwestowania w kina w danym powiecie, dla potencjalnego inwestora.
 
@@ -56,6 +61,7 @@ df3$Kod <- as.character(df3$Kod)
 df4 <- powiaty %>%
  left_join(df3, by = c('JPT_KOD_JE' = 'Kod'))
 # df4 jest naszą główną bazą danych
+View(df4)
 
 ```
 
@@ -66,10 +72,10 @@ ggplot()+ geom_sf(data = df4, aes(fill = kina)) + scale_fill_gradientn(colors = 
 
 ## Predykcja ilości kin na podstawie współczynników
 
-### Wykorzystanie ilości klubów sportowych jako współczynnika regresji
+### Wykorzystanie ilości klubów sportowych znormalizowanych populacją w powiecie jako współczynnika regresji
 
 ```{r,echo=FALSE,message = FALSE,warning = FALSE}
-ggplot()+ geom_sf(data = df4, aes(fill = kluby)) + scale_fill_gradientn(colors = terrain.colors(20))+ ggtitle("Ilość klubów w powiecie") +
+ggplot()+ geom_sf(data = df4, aes(fill = klub_ludn)) + scale_fill_gradientn(colors = terrain.colors(20))+ ggtitle("Ilość klubów normalizowana populacją w powiecie") +
     theme_light()+  labs(fill = "ilość klubów")
 ```
 ```{r,echo=FALSE, message = FALSE, warning = FALSE}
@@ -89,14 +95,14 @@ model1.lm <- lm(kina ~ klub_ludn,
                data = df4) 
 summary(model1.lm)
 ```
-#### Równanie regresji dla obliczania ilości kin na podstawie ilości klubów
+#### Równanie regresji dla obliczania ilości kin na podstawie ilości klubów znormalizowanych populacją w powiecie
 $$ y=   -0,3626  * ilość klubów + 3.3557 $$
 
 
-### Wykorzystanie ilości trenerów jako współczynnika regresji
+### Wykorzystanie ilości trenerów znormalizowanej populacją w powiecie jako współczynnika regresji
 
 ```{r,echo=FALSE,message = FALSE,warning = FALSE}
-ggplot()+ geom_sf(data = df4, aes(fill = trenerzy)) + scale_fill_gradientn(colors = terrain.colors(20))+ ggtitle("Ilość trenerów w powiecie") +
+ggplot()+ geom_sf(data = df4, aes(fill = trener_ludnosc)) + scale_fill_gradientn(colors = terrain.colors(20))+ ggtitle("Ilość trenerów normalizowana populacją w powiecie") +
     theme_light()+  labs(fill = "ilość trenerów")
 
 ```
@@ -107,7 +113,7 @@ ggplot(df4,aes(x=trener_ludnosc,
   xlab("Ilość trenerów normalizowana populacją w powiatach") +
   ylab("Liczba kin w powiecie")+
   
-  ggtitle("Wykres zależności liniowej między liczbą trenerów a liczba kin") +
+  ggtitle("Wykres zależności liniowej między liczbą trenerów normalizowaną populacją w powiecie a liczbą kin") +
   theme_light()+
   geom_smooth(method='lm')
   
@@ -120,14 +126,14 @@ model2.lm <- lm(kina ~ trener_ludnosc,
 
 summary(model2.lm)
 ```
-#### Równanie regresji dla obliczania ilości kin na podstawie ilości trenerów
+#### Równanie regresji dla obliczania ilości kin na podstawie ilości trenerów znormalizowanej wielkościa populacji w danym powiecie
 $$ y=   0.12910  * ilość trenerow + 0.95161 $$
 
 
-### Wykorzystanie ilości ćwiczących w klubach jako współczynnika regresji
+### Wykorzystanie ilości ćwiczących w klubach znormalizowanej populacją w powiecie jako współczynnika regresji
 ```{r,echo=FALSE,message = FALSE,warning = FALSE}
-ggplot()+ geom_sf(data = df4, aes(fill = cwiczacy)) + scale_fill_gradientn(colors = terrain.colors(20))+ ggtitle("Ilość ćwiczących w klubach w powiecie") +
-    theme_light()+  labs(fill = "ilość ćwiczących")
+ggplot()+ geom_sf(data = df4, aes(fill = cwiczacy_ludnosc)) + scale_fill_gradientn(colors = terrain.colors(20))+ ggtitle("Ilość ćwiczących w klubach w powiecie") +
+    theme_light()+  labs(fill = "ilość ćwiczących w powiecie")
 ```
 
 
@@ -151,14 +157,14 @@ model3.lm <- lm(kina ~ cwiczacy_ludnosc,
 summary(model3.lm)
 
 ```
-#### Równanie regresji dla obliczania ilości kin na podstawie ilości ćwiczących w klubach
+#### Równanie regresji dla obliczania ilości kin na podstawie ilości ćwiczących w klubach znormalizowanej populacją w powiecie 
 $$ y=   0.003336  * ilość cwiczących + 0.969294 $$
 ```{r,echo=FALSE,message = FALSE,warning = FALSE,include = FALSE}
 model4.lm <- lm(df4$kina~df4$klub_ludn+df4$trener_ludnosc+df4$cwiczacy_ludnosc)
 summary(model4.lm)
 ```
 
-### Równnaie regresji wielorakiej dla przewidywania ilosci kin na podstawie trzech współczynników: ilości klubów, ilosci trenerów i ilości ćwiczących
+### Równnaie regresji wielorakiej dla przewidywania ilosci kin na podstawie trzech współczynników: ilości klubów, ilosci trenerów i ilości ćwiczących. Współczynniki zostały znormalizowane wielkościa populacji w danym powiecie.
 
 $$ y=   -0.861039  * ilość klubów + 0.083766 * ilosć trenerów + 0.010695 * ilość ćwiczących +  1.913271 $$
 
