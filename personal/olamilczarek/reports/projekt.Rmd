@@ -1,0 +1,161 @@
+---
+title: "Analiza danych zachorowaÄąâ€ž na covid-19 w poszczegÄ‚Ĺ‚lnych powiatach."
+author: "olamilczarek"
+date: "25 czerwca 2020"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+library(readr)
+library(sf)
+library(dplyr)
+library(ggplot2)
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Wczytanie danych
+
+Poniższe dane dotyczące zachorowań na covid-19 w Polsce pochodzą ze strony https://docs.google.com/spreadsheets/d/1ierEhD6gcq51HAm433knjnVwey4ZE5DCnu1bW7PRG3E/htmlview?usp=sharing&pru=AAABczMR4LU*CCnXdWPxbdqJ7Hdtz58Rzg, której autorem jest Michał Rogalski i która jest codzielnie aktualizowana o nowe przypadki. Liczba zachorowań to stan na 27 czerwca. Pozostałe dane pochodzą ze strony GUSu i dotyczą: struktury wieku ludności(dane z 2019roku), gęstości zaludnienia (dane z 2019roku) i średniej wynagrodzeń w poszczególnych powiatach (2018r.).
+Aktualna wiedza na temat wirusa wykazuję że najczęsciej chorują osoby starsze lub występujące w dużych skupiskach takich jak fabryki, kopalnie, szpitale czy domy pomocy społecznej. 
+Celem pracy było sprawdzenie czy ilość zachorowań jest zależna od gęstości zaludnienia, występowaniem osób powyżej 70 roku życia i wysokości wynagrodzeń która może być związana z duża ilości firm.
+```{r}
+powiaty <- st_read(dsn = '~/ADP2020/personal/olamilczarek/data/jednostki_administracyjne/Powiaty.shp')
+covid <-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/COVID-19 wełdug powiatów.xlsx',sheet = 2)
+gestosc<-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/LUDN_2425.xlsx', sheet = 2)
+wiek<-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/wiek.xlsx', sheet = 2)
+wynagrodzenie<-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/WYNA.xlsx', sheet = 2)
+
+#ujednolicenie na kolumne JPT_KOD_JE
+powiaty$JPT_KOD_JE <- paste0(powiaty$JPT_KOD_JE, '000')
+names(covid)[names(covid) == "Kod"] <- "JPT_KOD_JE"
+gestosc <- gestosc[-c(1, 2), ]
+names(gestosc)[names(gestosc) == "Kod"] <- "JPT_KOD_JE"
+wiek <- wiek[-c(1, 2,3), ]
+names(wiek)[names(wiek) == "Kod"] <- "JPT_KOD_JE"
+names(wiek)[names(wiek) == '70 i więcej'] <- "starsi"
+names(wiek)[names(wiek) == "ogółem"] <- "wiek_lacznie"
+names(wynagrodzenie)[names(wynagrodzenie) == "ogółem"] <- "srednia_zarobki"
+wynagrodzenie <- wynagrodzenie[-c(1, 2), ]
+names(wynagrodzenie)[names(wynagrodzenie) == "Kod"] <- "JPT_KOD_JE"
+
+#zlaczenie
+df <- powiaty %>%
+  left_join(covid, by = c('JPT_KOD_JE'))%>%
+  left_join(gestosc,by = c('JPT_KOD_JE'))%>%
+  left_join(wiek,by=c('JPT_KOD_JE'))%>%
+  left_join(wynagrodzenie,by=c('JPT_KOD_JE'))
+
+```
+```{r}
+#dla 8 powiatów na 27.06 nie dostarczono danych 
+df[is.na(df$liczba_zachorowan),]
+```
+#Wizualizacja danych 
+
+Mapa gęstości zaludnienia:
+
+```{r}
+ggplot()+ 
+  geom_sf(data = df,aes(fill = df$`ludność na 1 km2`)) + 
+  scale_fill_gradientn(colors = terrain.colors(20))+
+  labs(fill = "gęstość zaludnienia na 1 km2")
+
+```
+```{r}
+df %>%
+  st_set_geometry(NULL) %>%
+  select(JPT_NAZWA_,`ludność na 1 km2`)%>%
+  arrange(by = desc(`ludność na 1 km2`)) %>%
+  top_n(10) 
+```
+
+Mapa odsetku osób powyżej 70 roku życia:
+
+```{r} 
+df$wspol_wiek<-(as.numeric(df$starsi)/as.numeric(df$wiek_lacznie))
+
+
+ggplot()+ 
+  geom_sf(data = df,aes(fill = df$wspol_wiek)) + 
+  scale_fill_gradientn(colors = terrain.colors(20))+
+  labs(fill = "osoby powyżej 70 lat")
+```
+Mapa średniej wynagrodzeń:
+```{r}
+
+df$srednia_zarobki<-(as.numeric(df$srednia_zarobki))
+
+ggplot()+ 
+  geom_sf(data = df,aes(fill = df$srednia_zarobki)) + 
+  scale_fill_gradientn(colors = terrain.colors(20))+
+  labs(fill = "średnia zarobków w PLN")
+```
+
+```{r}
+hist1<-df %>%
+  st_set_geometry(NULL) %>%
+  select(JPT_NAZWA_,srednia_zarobki)%>%
+  arrange(by = desc(srednia_zarobki)) %>%
+  top_n(10) 
+hist1
+```
+Mapa zachorowań na Covid-19:
+```{r}
+ggplot()+ 
+  geom_sf(data = df,aes(fill = df$liczba_zachorowan)) + 
+    labs(fill = "liczba zachorowań na covid-19-stan na 27.06")+
+  scale_fill_gradient(low = "darkslategrey", high = "firebrick", na.value = NA)
+```
+```{r}
+
+df %>%
+  st_set_geometry(NULL) %>%
+  select(JPT_NAZWA_,liczba_zachorowan )%>%
+  arrange(by = desc(liczba_zachorowan)) %>%
+  top_n(10) 
+```
+
+#Analiza danych
+```{r}
+#gestosc a zachorowania
+ggplot(df,aes(x = liczba_zachorowan, y= `ludność na 1 km2`)) + 
+  geom_point(size = 3) + 
+  geom_smooth(method = lm) +
+  labs(title = "Korelacja między liczba zachorowań a gestoscia ludności na 1km2", 
+       x= "liczba zachorowań", 
+       y = "gęstość na 1 km2")
+
+cor.test(df$liczba_zachorowan, df$`ludność na 1 km2`)
+```
+
+```{r}
+#wiek a zachorowania
+df$wspol_wiek<-(as.numeric(df$starsi)/as.numeric(df$wiek_lacznie))
+
+ggplot(df,aes(x = liczba_zachorowan, y= wspol_wiek)) + 
+  geom_point(size = 3) + 
+  geom_smooth(method = lm) +
+  labs(title = "Korelacja między liczba przypadkow, a ilościa ludzi powyzej 70lat", 
+       x= "liczba zachorowań", 
+       y = "współczynnik osób powyżej 70 roku życia")
+
+cor.test(df$liczba_zachorowan, df$wspol_wiek)
+
+```
+
+```{r}
+#wynagrodzenia a zachorowania
+df$srednia_zarobki<-as.numeric(df$srednia_zarobki)
+
+ggplot(df,aes(x = liczba_zachorowan, y= srednia_zarobki)) + 
+  geom_point(size = 3) + 
+  geom_smooth(method = lm) +
+  labs(title = "Korelacja między liczba przypadkow a średnią wynagrodzeń", 
+       x= "liczba zachorowań", 
+       y = "średnia wynagrodzeń")
+
+cor.test(df$liczba_zachorowan, df$srednia_zarobki)
+```
+Powyższe analizy nie wykazały zależności między liczbą zachorowań, a gestością zaludnienia, występowaniem osób powyżej 70lat i średnia zarobków. 
