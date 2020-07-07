@@ -1,0 +1,366 @@
+---
+title: "Analiza danych przestrzennych - projekt zaliczeniowy"
+author: "Krzysztof Wołowiec, Michał Groszewski, Adam Grochowski"
+date: "20 06 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message=FALSE)
+```
+
+
+```{r warning=FALSE, message=FALSE}
+library(dplyr)
+library(sf)
+library(xlsx)
+library(ggplot2)
+library(corrplot)
+library(reshape2)
+library(tmap)
+library(spData)
+#library(spDataLarge)
+library(raster)
+library(ggspatial)
+```
+
+
+# 1. ANALIZA DANYCH GUS
+
+# 1.1 Wstępne przetworzenie danych
+
+## 1.1.1 Wczytanie danych
+
+```{r}
+df.med.prices.per.m <- read.csv('med_price_per_m.csv', encoding='UTF-8', sep = ';', colClasses = c("character", NA, NA, NA, NA))
+df.unempl.rates <- read.csv('unempl_rate.csv', encoding='UTF-8', sep=';', dec = ',', colClasses = c("character", NA, NA))
+```
+
+
+```{r}
+for(df in list(df.med.prices.per.m, df.unempl.rates)) { #df.avg.prices, df.avg.prices.per.m, 
+  print(colnames(df))
+  print(nrow(df))
+  print('')
+  }
+```
+Złączenie danych będzie bazowało w zwiazku na df obejmującym bezrobocie. Wcześniej trzeba zmienić nazwy kolumn.
+
+## 1.1.2. Organizacja danych
+
+```{r}
+df.med.prices.per.m %>% 
+  rename('med_flat_price_per_m_total' = 'ogółem.ogółem.2018..zł.',
+         'med_flat_price_per_m_pm' = 'rynek.pierwotny.ogółem.2018..zł.',
+         'med_flat_price_per_m_sm' = 'rynek.wtórny.ogółem.2018..zł.') %>%
+  dplyr::select(-6) -> df.med.prices.per.m
+
+df.unempl.rates %>% 
+  rename('unempl_rate' = 'ogółem.2019....') %>% 
+  dplyr::select(-4) -> df.unempl.rates
+```
+
+
+```{r}
+df.full <- left_join(x = df.unempl.rates, 
+                     y = df.med.prices.per.m, 
+                     by = c('Kod' = 'Kod', 'Nazwa' = 'Nazwa'))
+
+head(df.full)
+```
+
+# 1.1.3. Integracja z danymi przestrzennymi
+
+```{r}
+powiaty.shp <- read_sf('shp/Powiaty.shp')
+woj.shp <- read_sf('shp/Województwa.shp')
+```
+
+
+```{r}
+head(powiaty.shp$JPT_KOD_JE, 20)
+head(df.full$Kod, 20)
+```
+
+
+Format kodu w danych GUS jest nieco inny niż w pliku shp. Po doprowadzeniu do jednolitej postaci można zrobić złączenie danych.
+
+```{r}
+df.full %>% mutate(kod_pow = substr(Kod, 0, 4)) -> df.full
+df.full[df.full == 0] <- NA
+df.geo <- left_join(x = powiaty.shp, 
+                    y = df.full, 
+                   by = c('JPT_KOD_JE' = 'kod_pow'))
+
+head(df.geo)
+```
+
+Nie wszystkie kolumny z `df.geo` będą nam potrzebne.
+```{r}
+ncol(powiaty.shp)
+```
+
+
+```{r}
+df.geo <- df.geo %>% dplyr::select(2,3, 30:ncol(df.geo))
+head(df.geo, 1)
+```
+
+
+# 1.2. Eksploracyjna analiza danych
+
+# 1.2.1. Przegląd danych
+
+Z jakiegoś powodu nie wszystkie poligony miały poprawną geometrię.
+```{r}
+df.geo <- st_make_valid(df.geo)
+```
+
+
+```{r fig.width=10, fig.height=8, warning=F}
+basemap <- tm_shape(df.geo) + 
+  tm_borders() + 
+  tm_layout(legend.title.size = 1.2,
+            legend.text.size = 0.8,
+            legend.position = c("LEFT","BOTTOM"),
+            legend.format = list(text.separator = '–'),
+            legend.outside = TRUE,
+            title.position = c('left','top'))  
+
+wojlayer <- tm_shape(woj.shp) + tm_borders(lwd = 3)
+
+  
+map.unempl <- basemap + tm_fill(col = 'unempl_rate', 
+                                palette = 'YlOrBr', 
+                                style = 'kmeans', 
+                                title = 'Stopa bezrobocia w %:',
+                                n = 6,
+                                textNA = 'Brak danych'
+                                ) + wojlayer
+
+map.med.price.total <- basemap + tm_fill(col = 'med_flat_price_per_m_total',  
+                                         palette = 'YlOrBr', 
+                                         style = 'kmeans', 
+                                         title = 'Mediana cen za \nmetr kw mieszkania:',
+                                         n = 6,
+                                         textNA = 'Brak danych') + wojlayer
+
+map.med.price.sm <- basemap + tm_fill(col = 'med_flat_price_per_m_sm', 
+                                      palette = 'YlOrBr', 
+                                      style = 'kmeans', 
+                                      title = 'Mediana cen za \nmetr kw mieszkania \nna rynku wtórnym:',
+                                      n = 6,
+                                      textNA = 'Brak danych') + wojlayer
+
+map.med.price.pm <- basemap + tm_fill(col = 'med_flat_price_per_m_pm', 
+                                      palette = 'YlOrBr', 
+                                      style = 'kmeans', 
+                                      title = 'Mediana cen za \nmetr kw mieszkania \nna rynku pierwotnym:',
+                                      n = 6,
+                                      textNA = 'Brak danych') + wojlayer
+
+tmap_arrange(map.unempl, map.med.price.total, map.med.price.sm, map.med.price.pm, nrow=2, ncol=2)
+
+```
+
+
+# 1.2.2. Analiza korelacji wybranych zmiennych
+
+```{r}
+df.full.melted <- tidyr::gather(df.full, 'key', 'value', 
+                                med_flat_price_per_m_sm, med_flat_price_per_m_pm, med_flat_price_per_m_total)
+head(df.full.melted, 2)
+```
+
+
+```{r warning=F, message=F, fig.width=10, fig.height=4}
+ggplot(df.full.melted, aes(x = value, fill = key)) +
+  geom_histogram(alpha = 0.5, color = 'black', show.legend = F) +
+  facet_wrap(facets = 'key', scales = "free") +
+  labs(title = 'Histogramy median cen za metr kwadratowy mieszkania wg powiatów',
+      subtitle = 'Stan z 31.12.2018 r.',
+      caption = 'Opracowano na podstawie danych GUS')
+```
+
+
+```{r fig.width=4, fig.height=4, message=F}
+ggplot(df.full, aes(x = unempl_rate)) +
+  geom_histogram(alpha = 0.5, color = 'black', show.legend = F) +
+  labs(title = 'Histogram stopy bezrobocia wg powiatów',
+      subtitle = 'Stan z 31.12.2018 r.',
+      caption = 'Opracowano na podstawie danych GUS',
+      x = 'stopa bezrobocia rejestrowanego [%]')
+```
+
+**Tutaj napisz coś o tym, że dane nie mają rozkładu normalnego, że są skośne itd.
+
+```{r warning=F, message=F, fig.width=10, fig.height=5}
+title = 'Relacja między stopą bezrobocia (oś x) a poszczególnymi zmiennymi opisującymi ceny na rynku nieruchomości \n(w podziale na twórny i pierwotny) (oś y).'
+
+ggplot(df.full.melted, aes(x = unempl_rate, y = value)) +
+  geom_point(size = 1, alpha = 0.3) +
+  geom_smooth(method = 'lm', aes(color = key), show.legend = F) +
+  facet_wrap(facets = 'key', scales = "free") +
+  labs(
+      title = title,
+      subtitle = 'Stan z 31.12.2018 r.',
+      caption = 'Opracowano na podstawie danych GUS',
+      x = 'stopa bezrobocia rejestrowanego',
+      y = 'zmienna dotycząca rynku nieruchomości'
+      )
+```
+
+Tutaj napisz coś o tym, że widać obserwacje odstające - napisz dlaczego występują, że duże miasta albo lokacje nadmorskie? Coś takiego.
+
+
+```{r warning=F, fig.width=8, fig.height=3}
+plot.boxes <- function(df) {
+  df.melted <- tidyr::gather(df, 'key', 'value', med_flat_price_per_m_sm, med_flat_price_per_m_pm, med_flat_price_per_m_total)
+  
+  ggplot(df.melted,  aes(x = key, y = value)) +
+    geom_boxplot() +
+    facet_wrap(facets = 'key', scales = "free", ncol=3)
+}
+
+plot.boxes(df.full)
+
+```
+
+Arbitralnie odcinamy obserwacje większe niż kwartyl rzędu 0.9.
+
+
+```{r warning=F}
+qnt <- quantile(df.full$med_flat_price_per_m_total, probs = c(.90), na.rm = T)
+df.kor <- df.full[ df.full$med_flat_price_per_m_total < qnt, ]
+plot.boxes(df.kor)
+```
+
+### 1.2.3 Sprawdzenie normalności rozkładu
+```{r}
+shapiro.test(df.kor$unempl_rate)
+shapiro.test(df.kor$med_flat_price_per_m_total)
+shapiro.test(df.kor$med_flat_price_per_m_pm)
+shapiro.test(df.kor$med_flat_price_per_m_sm)
+```
+
+Dla zmiennych `unempl_rate` i `med_flat_price_per_m_sm` nie możemy założyć normalności rozkładu.
+
+
+## 1.2.4. Korelacja Spearmana - prawidłowy wybór dla danych o rozkładzie innym niż normalny i gdy związek między zmiennymi nie jest liniowy.
+
+Pozwala uchwycić zależność monotoniczną między zmiennymi. Korelacja spearmana jest mniej wrażliwa na obserwacje odstające, to też użyta została na danych przed eliminacją obserwacji odstających.
+
+```{r fig.height=3}
+corrs <- cor(x = df.full$unempl_rate, 
+             y = dplyr::select(df.full, -c(unempl_rate,Nazwa, Kod, kod_pow)), 
+             use = 'pairwise.complete.obs',
+             method = 'spearman')
+
+corrplot(corrs, method = 'number')
+```
+
+Widoczna jest słaba negatywna korelacja między stopą bezrobocia, a medianą ceny za metr kwadratowy. Na rynku pierwotnym za zależność jest mniejsza.
+
+# 2. STATYSTYKI STREFOWE
+
+## 2.1 Wczytanie danych NMT PL
+
+```{r}
+DEM.Poland <- getData('alt', country = 'pol', mask = TRUE)
+summary(DEM.Poland[])
+ # Funkcja do do pobrania informacji o poligonach
+```
+
+```{r}
+summary(DEM.Poland[])
+```
+
+
+
+```{r}
+woj <- read_sf('shp/Województwa.shp')
+woj$JPT_KOD_JE <- as.numeric(woj$JPT_KOD_JE)
+woj2 <- st_transform(woj, 4326) 
+```
+
+```{r warning=FALSE, message=FALSE}
+woj.el.mean <- extract(DEM.Poland, woj, fun = 'mean', na.rm=T, df=T, weights=T)
+woj.el.max <- extract(DEM.Poland, woj, fun = max, na.rm=T, df=T)
+woj.el.min <- extract(DEM.Poland, woj, fun = min, na.rm=T, df=T)
+```
+
+```{r}
+woj.el.stats <- data.frame(woj.el.mean, woj.el.max, woj.el.min) %>%
+  rename(el.min = POL_msk_alt.2,
+         el.max = POL_msk_alt.1,
+         el.mean = POL_msk_alt) %>%
+  dplyr::select(-c(ID.1, ID.2))
+
+woj <- woj %>% mutate(ID = row_number())
+
+woj.el.stats.geom <- left_join(x = woj, 
+                 y = woj.el.stats, 
+                 by = 'ID')
+
+woj.el.stats.geom %>% dplyr::select(JPT_NAZWA_, el.mean, el.max, el.min)
+```
+
+
+
+```{r message=FALSE}
+basemap <- tm_shape(woj.el.stats.geom) + tm_borders()
+
+map.min <- basemap + tm_fill(col = 'el.min', palette = '-BrBG')
+map.mean <- basemap + tm_fill(col = 'el.mean',  palette = 'YlOrBr')
+map.max <- basemap + tm_fill(col = 'el.max', palette = 'YlOrBr')
+
+tmap_arrange(map.min, map.max, map.mean)
+```
+
+
+```{r}
+ggplot(woj.el.stats.geom, aes(x=reorder(JPT_NAZWA_, el.mean, FUN = median))) +
+  geom_errorbar(aes(ymin=el.min, ymax=el.max)) +
+  geom_point(aes(y=el.mean)) +
+  labs(title='Podstawowe statystyki strefowe dla województw',
+       subtitle='Rozstęp wysokości i średnia na podstawie Numerycznego Modelu Terenu',
+       x='', y='Wysokość') +
+  theme_light() +
+  theme(axis.text.x = element_text(angle = 90, face = 'bold', size=12, vjust=0)) +
+  coord_flip()
+```
+
+W dolnośląskim średnia jest niższa niż w śląskim i podkarpackim, znacznie bliżej mu pod tym względem do świętokrzystkiego, jednak max jest  większy od dwóch wspomnianych województw. Rejon śnieżki jest znacznie wyżej położony niż Beskid Śląski, czy Bieszczady, jednak dolnośląskie obejmuje również nieco większe obszary terenów niżej położonych.
+
+
+```{r}
+powiaty <- read_sf('shp/Powiaty.shp')
+```
+
+```{r}
+powiaty$JPT_KOD_JE <- as.numeric(powiaty$JPT_KOD_JE)
+powiaty2 <- st_transform(powiaty, 4326) 
+powiaty.ra <- rasterize(powiaty2, 
+                               DEM.Poland, 
+                               field = 'JPT_KOD_JE',
+                               fun = max)
+powiaty.zone <- zonal(DEM.Poland, powiaty.ra, fun = max)
+#powiaty3 <- left_join(powiaty2, as.data.frame(powiaty.zone), by=c('JPT_KOD_JE'='zone'))
+```
+```{r}
+powiaty3 <- left_join(powiaty2, as.data.frame(powiaty.zone), by=c('JPT_KOD_JE'='zone'))
+```
+
+
+
+```{r}
+
+ggplot()+geom_sf(data = powiaty3, aes(fill=value)) +
+  scale_fill_gradientn(colours = c("darkgreen", "green4", "green", "yellow", "yellow2", "orange", "red", "red3", "red4", "brown", "black"), 
+                       breaks = c(0, 200, 400,600, 800, 1000, 1200, 1400, 1600, 1800, 2100))
+
+```
+
+
+
+
