@@ -1,0 +1,108 @@
+---
+title: "zaj3"
+author: "olamilczarek"
+date: "25 kwietnia 2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE)
+library("ggplot2")
+library("readxl")
+```
+##1.zadania polegającego na stworzeniu punktu linii i kwadratu, a następnie wyświetleniu na mapie.
+
+```{r}
+punkt <- st_point(c(17, 52)) %>% st_sfc(crs = st_crs(world)) %>% st_sf()
+ggplot()+
+  geom_sf(data = world)+  geom_sf(data = punkt, size = 4, col = 'dark green')+ 
+  theme_light()
+
+```
+```{r}
+linestring_matrix = rbind(c(1, 5), c(4, 4), c(4, 1), c(2, 2), c(3, 2))
+line <- st_linestring(linestring_matrix)
+plot(line)
+
+```
+```{r}
+polygon_list = list(rbind(c(1, 5), c(2, 2), c(4, 1), c(4, 4), c(1, 5)))
+poligon <- st_polygon(polygon_list)
+plot(poligon)
+
+```
+##Stwórzcie obiekt będący poligonem (kwadratem) otaczającym Polskę,
+```{r}
+poland<-world%>%
+  filter(name_long=='Poland')
+
+
+polygon_list = list(rbind(c(13.9, 55), c(24.2, 55), c(24.2, 48.9), c(14, 48.9), c(13.9, 55)))
+poligon <- st_polygon(polygon_list) %>% 
+  st_sfc(crs = st_crs(poland)) %>% 
+  st_sf()
+ggplot()+
+  geom_sf(data = poland)+  geom_sf(data = poligon, size = 4, col = 'dark green',fill=NA)+ 
+  theme_light()
+
+
+```
+
+##Stwórzcie linię przecinającą Polskę na część wschodnią i zachodnią (mniej więcej przebiegającą przez rzekę Wisłę). Niech linia ta składa się z 5 punktów.
+```{r}
+poland<-world%>%
+  filter(name_long=='Poland')
+
+
+linestring_matrix = rbind(c(20, 55),c(20,54),c(20,53),c(20,52),c(20,49))
+line <- st_linestring(linestring_matrix) %>% 
+  st_sfc(crs = st_crs(poland)) %>% 
+  st_sf()
+ggplot()+
+  geom_sf(data = poland)+  geom_sf(data = line, size = 2, col = 'dark green',fill=NA)+ 
+  theme_light()
+```
+
+Wyświetlcie na mapie kontur Polski ze zbioru world, oraz utworzone obie warstwy.
+```{r}
+
+ggplot()+
+  geom_sf(data = poland)+  geom_sf(data = poligon, size = 2, col = 'dark green',fill=NA)+
+  geom_sf(data=line,size=2)+
+  theme_light()
+
+```
+
+#Jaką powierzchnię ma Polska?
+```{r}
+poland%>%
+  select(area_km2)
+
+```
+
+
+##2.	ściągnijcie jakiekowliek dane z BDL (bank danych lokalnych), ściągnijcie granice administracyjne z Państwowego Rejestru Granic, zróbcie złączenie danych i wyświetlcie mapę Polski (powiatów lub gmin) z ukazaniem danych złączonych z BDL.
+```{r}
+powiaty <- st_read(dsn ="~/ADP2020/personal/olamilczarek/data/jednostki_administracyjne/Powiaty.shp")
+head(powiaty$JPT_KOD_JE)
+
+```
+
+```{r}
+ludn<-read_xls( 'C:/Users/Anna/Documents/ADP2020/personal/olamilczarek/data/LUDN_2425.xls')
+
+
+```
+
+```{r}
+
+powiaty$JPT_KOD_JE<-paste0(powiaty$JPT_KOD_JE,'000')
+
+df <- left_join(powiaty,ludn,by = c("JPT_KOD_JE" = "Kod"))
+ggplot(df,aes(fill='ludność na 1 km2 2018'))+
+  geom_sf()
+
+```
+
+
