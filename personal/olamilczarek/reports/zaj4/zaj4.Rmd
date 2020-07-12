@@ -1,0 +1,125 @@
+---
+title: "zaj4"
+author: "olamilczarek"
+date: "9 maja 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#zad.1
+##Pobierz cyfrowy model wysokościowy 
+
+```{r}
+library(raster)
+DEM.PL <-getData('alt', country='POL', mask=TRUE)
+```
+##Sprawdź wyskość minimalną oraz maksymalą w Polsce
+
+```{r}
+med.dem <- median(DEM.PL[ ], na.rm = T)
+max.dem <- max(DEM.PL[ ], na.rm = T)
+
+```
+              
+#Zreklasyfikuj cyfrowy model terenu, aby wskazać depresje(obszary ponizej 0)
+```{r}
+DEM.PL.reclass <- reclassify(x = DEM.PL,                                rcl = matrix(c(0,max.dem,0,                     -12, max.dem,1),
+ncol=3,byrow=T))
+
+```
+
+#Wyświetl mapę
+
+```{r}
+plot(DEM.PL)
+plot(DEM.PL.reclass)
+```
+Utwórz nowy plik markdown do realizacji zadania.
+Wczytaj dane znajdujące się w pliku “ratajeNieruchomosci.Rdata” (Patrz. nast. slajd)
+Dokonaj eksploracji danych.
+Wyświetl na mapie lokalizacje nieruchomości.
+
+```{r}
+load ("~/ADP2020/data/ratajeNieruchomosci2.Rdata")
+```
+```{r}
+
+library('caret')
+library('corrplot')
+library("dplyr")
+library("sf")
+library(ggplot2)
+
+```
+
+
+
+```{r}
+
+
+
+
+wtorne.rataje.df <-st_set_geometry(wtorne.rataje,NULL)  #zamiana sf na df
+wtorne.rataje.df$rok <- as.factor(wtorne.rataje.df$rok)
+#zamiana integer na factor
+
+wtorne.rataje.df%>%
+  select (-rok)%>%
+  cor()%>%
+  corrplot()
+
+
+```
+```{r}
+str(wtorne.rataje.df)
+```
+```{r}
+head(wtorne.rataje.df)
+
+```
+```{r}
+summary(wtorne.rataje.df)
+```
+
+```{r}
+ggplot(wtorne.rataje.df,aes(x=Cn_m2_l,y=Pwrzchn))+
+  geom_point()
+
+```
+
+```{r}
+
+
+cvCtrl <- trainControl(method = "repeatedcv", 
+                       number =10, 
+                       repeats =2)
+
+```
+
+
+
+```{r}
+
+
+linearmodel <- train(data = wtorne.rataje.df,
+                     Cn_m2_l~rok+Pwrzchn+Kndygnc+BUD_PRZEM_euclid+
+                       CENTRA_HANDLOWE_euclid+DROGI_GLOWNE_euclid+
+                       KOMINY_euclid+                   SZKOLA_PODSTAWOWA_euclid+WARTA_euclid ,
+                     method = 'lm', metric = 'RMSE',
+                      tuneLength = 10, trControl = cvCtrl)
+summary(linearmodel)
+##
+pred.params<-data.frame(rok=factor('2011'),
+                        Pwrzchn=60,
+                        Kndygnc=1
+                        )
+
+prognoza.rataje<-raster::predict (rataje.rastry,linearmodel,const=pred.params)
+
+prognoza.rataje
+
+```
+
+
