@@ -1,0 +1,82 @@
+---
+title: "zaj2"
+author: "olamilczarek"
+date: "4 kwietnia 2020"
+output: html_document
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message=FALSE)
+```
+
+
+```{r }
+library("sf") 
+library("raster")
+#library("spDataLarge")
+library("fs")
+library("dplyr")
+library("ggplot2")
+library ("spData")
+
+```
+## Slajd12
+## Mapa krajów Europejskich  wg liczby ludności
+
+```{r}
+world%>%
+  filter(continent=="Europe")%>%
+  select (pop)%>%
+  plot()
+```
+##Który kraj posiada najmniejszą liczbę ludności i ile wynosi
+```{r}
+world%>%
+  top_n(-1,pop)%>%
+  select (name_long,pop)
+```
+##Ile krajów znajduje się w Azji?
+
+```{r}
+c1<-world%>%
+  filter(continent=="Asia")%>%
+  distinct(name_long)
+nrow(c1)   
+```
+##Wyświetlcie histogram powierzchni  wszystkich niezależnych krajów (Sovereign Country)
+```{r}
+worldSC<-world%>%
+  filter(type=="Sovereign country")
+ggplot(worldSC,
+       mapping=aes(x=area_km2))+
+  geom_histogram()
+   
+```
+
+##Wyświetlcie wykres punktowy relacji pomiędzy lifeExp, a gdpPercap
+
+```{r}
+ggplot(world,mapping=aes(x=gdpPercap,y=lifeExp))+
+  geom_point()
+```
+
+##Slajd16
+##Jaka jest maksymalna wysokość w danym obrazie rastrowym?
+```{r}
+raster_filepath = system.file("raster/srtm.tif", package = "spDataLarge")
+ new_raster = raster(raster_filepath)
+new_raster
+new_raster[ ]
+plot(new_raster)
+
+```
+```{r}
+max(new_raster[],na.rm = NA)
+```
+
+##Jaki jest rozkład wartości obrazu rastrowego?
+```{r}
+hist(new_raster)
+```
+
