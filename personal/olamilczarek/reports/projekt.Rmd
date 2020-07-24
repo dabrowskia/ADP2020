@@ -26,6 +26,7 @@ covid <-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/COVID-19 wełdug
 gestosc<-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/LUDN_2425.xlsx', sheet = 2)
 wiek<-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/wiek.xlsx', sheet = 2)
 wynagrodzenie<-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/WYNA.xlsx', sheet = 2)
+liczba_ludn<-readxl::read_xlsx('~/ADP2020/personal/olamilczarek/data/liczba_ludn.xlsx', sheet = 2)
 
 #ujednolicenie na kolumne JPT_KOD_JE
 powiaty$JPT_KOD_JE <- paste0(powiaty$JPT_KOD_JE, '000')
@@ -39,13 +40,16 @@ names(wiek)[names(wiek) == "ogółem"] <- "wiek_lacznie"
 names(wynagrodzenie)[names(wynagrodzenie) == "ogółem"] <- "srednia_zarobki"
 wynagrodzenie <- wynagrodzenie[-c(1, 2), ]
 names(wynagrodzenie)[names(wynagrodzenie) == "Kod"] <- "JPT_KOD_JE"
+liczba_ludn <- liczba_ludn[-c(1, 5), ]
+names(liczba_ludn)[names(liczba_ludn) == "Kod"] <- "JPT_KOD_JE"
 
 #zlaczenie
 df <- powiaty %>%
   left_join(covid, by = c('JPT_KOD_JE'))%>%
   left_join(gestosc,by = c('JPT_KOD_JE'))%>%
   left_join(wiek,by=c('JPT_KOD_JE'))%>%
-  left_join(wynagrodzenie,by=c('JPT_KOD_JE'))
+  left_join(wynagrodzenie,by=c('JPT_KOD_JE'))%>%
+  left_join(liczba_ludn,by=c('JPT_KOD_JE'))
 
 ```
 ```{r}
@@ -120,12 +124,14 @@ df %>%
 #Analiza danych
 ```{r}
 #gestosc a zachorowania
-ggplot(df,aes(x = liczba_zachorowan, y= `ludność na 1 km2`)) + 
+ggplot(df,aes(x =`ludność na 1 km2` , y= liczba_zachorowan)) + 
   geom_point(size = 3) + 
   geom_smooth(method = lm) +
+  scale_x_log10()+
+  scale_y_log10()+
   labs(title = "Korelacja między liczba zachorowań a gestoscia ludności na 1km2", 
-       x= "liczba zachorowań", 
-       y = "gęstość na 1 km2")
+       y= "liczba zachorowań", 
+       x = "gęstość na 1 km2")
 
 cor.test(df$liczba_zachorowan, df$`ludność na 1 km2`)
 ```
@@ -134,12 +140,14 @@ cor.test(df$liczba_zachorowan, df$`ludność na 1 km2`)
 #wiek a zachorowania
 df$wspol_wiek<-(as.numeric(df$starsi)/as.numeric(df$wiek_lacznie))
 
-ggplot(df,aes(x = liczba_zachorowan, y= wspol_wiek)) + 
+ggplot(df,aes(x = wspol_wiek, y= liczba_zachorowan)) + 
   geom_point(size = 3) + 
   geom_smooth(method = lm) +
+  scale_x_log10()+
+  #scale_y_log10()+
   labs(title = "Korelacja między liczba przypadkow, a ilościa ludzi powyzej 70lat", 
-       x= "liczba zachorowań", 
-       y = "współczynnik osób powyżej 70 roku życia")
+       y= "liczba zachorowań", 
+       x = "współczynnik osób powyżej 70 roku życia")
 
 cor.test(df$liczba_zachorowan, df$wspol_wiek)
 
@@ -149,13 +157,49 @@ cor.test(df$liczba_zachorowan, df$wspol_wiek)
 #wynagrodzenia a zachorowania
 df$srednia_zarobki<-as.numeric(df$srednia_zarobki)
 
-ggplot(df,aes(x = liczba_zachorowan, y= srednia_zarobki)) + 
+ggplot(df,aes(x =srednia_zarobki , y=liczba_zachorowan)) + 
   geom_point(size = 3) + 
   geom_smooth(method = lm) +
+  #scale_x_log10()+
+  scale_y_log10()+
   labs(title = "Korelacja między liczba przypadkow a średnią wynagrodzeń", 
-       x= "liczba zachorowań", 
-       y = "średnia wynagrodzeń")
+       y= "liczba zachorowań", 
+       x = "średnia wynagrodzeń")
 
 cor.test(df$liczba_zachorowan, df$srednia_zarobki)
 ```
+ 
+
+```{r}
+
+df$wsp_100<-(df$liczba_zachorowan/df$liczba_ludn)*100000
+
+ggplot()+ 
+  geom_sf(data = df,aes(fill = df$wsp_100)) + 
+  scale_fill_gradientn(colors = terrain.colors(20))+
+  labs(fill = "wskaźnik zachorowalności na 100 000 osób")
+
+df %>%
+  st_set_geometry(NULL) %>%
+  select(JPT_NAZWA_,wsp_100)%>%
+  arrange(by = desc(wsp_100)) %>%
+  top_n(10) 
+
+
+```
+```{r}
+#gestosc a zachorowania
+ggplot(df,aes(x =`ludność na 1 km2` , y=wsp_100 )) + 
+  geom_point(size = 3) + 
+  geom_smooth(method = lm) +
+  scale_x_log10()+
+  scale_y_log10()+
+  labs(title = "Korelacja między wspólczynnikeim zachorowań a gestoscia ludności na 1km2", 
+       y= "wspólczynnik zachorowań", 
+       x = "gęstość na 1 km2")
+
+cor.test(df$wsp_100 , df$`ludność na 1 km2`)
+```
 Powyższe analizy nie wykazały zależności między liczbą zachorowań, a gestością zaludnienia, występowaniem osób powyżej 70lat i średnia zarobków. 
+Największa ilość zachowań wystąpiła w województwie śląskim (7 na 10 pierwszych powiatów z największą zachorowalnością) co może wynikac z pojedyńczych ognisk (kopalnie,dps-y) a nie z ogólnej liczby ludności. Moim zdaniem większy udział ma tutaj rozległość terenów miejskich sląska niż sama gestośc zaludnienia. Na tak nierównomierna ilość zachowań może mieć również przeprowadzanie testów w grupach które były narzażone na działanie wirusa, a nie w całych powaitach. 
+Być może należałoby przeprowadzić analize kliku czynników.
