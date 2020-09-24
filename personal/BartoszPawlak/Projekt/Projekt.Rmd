@@ -1,0 +1,272 @@
+---
+title: "Wpływ gęstości zaludnienia na średnią cenę mieszkania w powiatach województwa wielkopolskiego w latach 2017-2018"
+author: "Budny Michał, Pawlak Bartosz"
+date: "14 Czerwiec 2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(dplyr)
+library(tidyverse)
+library(sf)
+library(raster)
+library(spData)
+library(spDataLarge)
+library(tmap)
+library(leaflet)
+library(mapview)
+library(ggplot2)
+library(ggspatial)
+library(shiny)
+library(tidyr)
+library(reshape2)
+library(gridExtra)
+library(egg)
+
+dane_mieszkan_rynek_wlkp = read.csv("rynek_wlkp.csv", sep = ";", encoding = "UTF-8", header = TRUE);
+Ogolny_zaludnienie = read.csv("Ogolny_zaludnienie.csv", sep = ";", encoding = "UTF-8", header = TRUE);
+```
+
+## Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+# Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w roku 2017
+ogolny2017 <- ggplot(dane_mieszkan_rynek_wlkp,
+  aes(x=as.factor(Nazwa),
+  y=as.factor(ogolny2017))) +
+  geom_col(fill = "red", colour = "black") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = 'Średnia cena za 1 m2 mieszkania w roku 2017',
+       x= "Powiat",
+       y = "Cena za m2",
+       fill = "Dose (mg)")
+plot(ogolny2017)
+
+cat("Najdrozsze ceny mieszkan w roku 2017 znajdowaly sie w powiecie miasta Poznan (ok. 5812 zl za 1m2),\nnajtansze ceny mieszkan w roku 2017 znajdowaly sie w powiecie Kaliskim (ok. 1548 zl za 1m2)")
+
+# Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w roku 2018
+ogolny2018 <- ggplot(dane_mieszkan_rynek_wlkp,
+  aes(x=as.factor(Nazwa),
+  y=as.factor(ogolny2018))) +
+  geom_col(fill = "blue", colour = "black") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = 'Średnia cena za 1 m2 mieszkania w roku 2018',
+       x= "Powiat",
+       y = "Cena za m2")
+plot(ogolny2018)
+
+cat("Najdrozsze ceny mieszkan w roku 2018 znajdowaly się rowniez w powiecie miasta Poznan\n(ok. 6147 zl za 1m2), rowniez najtansze ceny mieszkan w roku 2018\nznajdowaly sie w powiecie Kaliskim (ok. 2106 zl za 1m2)")
+
+Ogolny <- dane_mieszkan_rynek_wlkp[,c("Nazwa", "ogolny2017", "ogolny2018")]
+names(Ogolny)[names(Ogolny) == "ogolny2017"] <- "Rok 2017"
+names(Ogolny)[names(Ogolny) == "ogolny2018"] <- "Rok 2018"
+
+#Porównanie średniej ceny za 1m2 mieszkania w powiatach województwa wielkopolskiego w latach 2017/2018
+Ogolny %>% melt %>%
+  ggplot(aes(as.factor(Nazwa), value, fill=variable))+geom_col(position='dodge') +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = 'Średnia cena za 1 m2 mieszkania w latach 2017/2018',
+    x= "Powiat",
+    y = "Cena za m2") +
+  guides(fill=guide_legend(title="Rok")) +
+  scale_fill_manual(values=c("red", "blue"))
+
+cat("Porownując ze sobą rok 2017 i 2018 można zaobserwować ze ceny mieszkan\nmiast powiatowych w roku 2018 wzrosły w stosunku do roku 2017.\nW pozostałych powiatach roznice sa niewielkie")
+```
+
+# Pobieranie danych, wizualizacja analizy strefowej dla Polski
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+DEM.Poland <-getData('alt', country='POL', mask=TRUE)
+
+powiaty <- st_read("D:/1. Studia/2. Magisterka/4. semestr/2. Analiza Danych Przestrzennych/1. Projekt/1. Gotowy — kopia/Projekt/Powiaty.shp", stringsAsFactors = F)
+```
+
+## Podział administracyjny Polski
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+powiaty$JPT_KOD_JE <- as.numeric(powiaty$JPT_KOD_JE)
+powiaty.transformed <- st_transform(powiaty, 4326)
+powiaty.rasterized <- rasterize(powiaty.transformed, DEM.Poland,
+                                field = 'JPT_KOD_JE', fun = mean)
+plot(powiaty.rasterized)
+
+# W nastepnych etapach projektu wykorzystamy ta wizualizacje do stworzenia wizualizacji województwa wielkopolskiego
+```
+
+## Podział administracyjny wojewodztw (z wysokoscia nad poziomem morza)
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+powiaty$JPT_KOD_JE <- as.numeric(powiaty$JPT_KOD_JE)
+powiaty.transformed <- st_transform(powiaty, 4326)
+powiaty.rasterized <- rasterize(powiaty.transformed, DEM.Poland,
+                                field = 'JPT_KOD_JE', fun = min)
+powiaty.zone <- zonal(DEM.Poland, powiaty.rasterized, fun = mean)
+powiaty3 <- left_join(powiaty.transformed, as.data.frame(powiaty.zone),
+                      by=c('JPT_KOD_JE'='zone'))
+ggplot()+geom_sf(data = powiaty3, aes(fill=value)) +
+  annotation_scale(location = "bl", width_hint = 0.3) +
+  scale_fill_gradientn(colours = terrain.colors(20))
+```
+
+## Mapa powiatowa województwa wielkopolskiego z centroidami
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+wielkopolska_powiaty <- powiaty %>% filter(JPT_KOD_JE >= 3000 & JPT_KOD_JE < 3200)
+wielkopolska_powiaty <- st_make_valid(wielkopolska_powiaty)
+wielkopolska_centroidy <- tm_shape(wielkopolska_powiaty) + tm_polygons() + tm_shape(st_centroid(wielkopolska_powiaty)) +
+  tm_dots(size = 0.05, col = "black")
+
+wielkopolska_centroidy
+
+# Wizualizacja wojewodztwa wielkopolskiego zostanie wykorzystana do wizualizacji cen mieszkan na rynku pierwotnym i wtórnym
+```
+
+## Mapa wysokościowa województwa wielkopolskiego
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+wielkopolska_powiaty$JPT_KOD_JE <- as.numeric(wielkopolska_powiaty$JPT_KOD_JE)
+wielkopolska_powiaty.transformed <- st_transform(wielkopolska_powiaty, 4326)
+wielkopolska_powiaty.rasterized <- rasterize(wielkopolska_powiaty.transformed, DEM.Poland, field = 'JPT_KOD_JE')
+wielkopolska_wysokosc <- tm_shape(wielkopolska_powiaty.rasterized) + tm_raster()
+
+wielkopolska_wysokosc
+```
+
+# Wpływ gęstości zaludnienia na średnią cenę mieszkania w powiatach województwa wielkopolskiego w latach 2017-2018
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+# prepare data
+dane_mieszkan_rynek_wlkp <- dane_mieszkan_rynek_wlkp %>% mutate(JPT_KOD_JE = as.numeric(.$Kod / 1000))
+#merge 'dane_mieszkan_rynek_wlkp' with 'wielkopolska_powiaty'
+cena_mieszkan_rynek_wlkp <- wielkopolska_powiaty %>% left_join(dane_mieszkan_rynek_wlkp)
+
+
+
+#Prepare df 'Ogolny_zaludnienie' to merge with 'dane_mieszkan_rynek_wlkp'
+Ogolny_zaludnienie <- Ogolny_zaludnienie[,c("Nazwa","Rok2017", "Rok2018")]
+#merge 'dane_mieszkan_rynek_wlkp' with 'Ogolny_zaludnienie'
+wsp <- merge(x = dane_mieszkan_rynek_wlkp, y = Ogolny_zaludnienie, by = "Nazwa", all = TRUE)
+wsp <- tbl_df(wsp)
+#Processing coefficients (update columns)
+wsp <- wsp%>%mutate(pierwotny2017=(Rok2017*pierwotny2017)/2)
+wsp <- wsp%>%mutate(wtorny2017=(Rok2017*wtorny2017)/2)
+wsp <- wsp%>%mutate(pierwotny2018=(Rok2018*pierwotny2018)/2)
+wsp <- wsp%>%mutate(wtorny2018=(Rok2018*wtorny2018)/2)
+wsp %>% mutate_if(is.numeric, ~round(., 1))
+#merge 'wsp' with 'wielkopolska_powiaty'
+wsp <- wielkopolska_powiaty %>% left_join(wsp)
+
+
+
+#Cena za 1m2 mieszkania w roku 2017
+map_wlkp_legend = expression("Cena mieszkan (za 1m"^2*")")
+
+map_wlkp_rynek_pierwotny <- tm_shape(cena_mieszkan_rynek_wlkp) +
+  tm_fill(col = "pierwotny2017",
+          title = map_wlkp_legend,
+          breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000, 7000),
+          style = "fixed",
+          textNA = "No data",
+          colorNA = "white",
+          palette = "Reds") +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek pierwotny")
+
+map_wlkp_rynek_wtorny <- tm_shape(cena_mieszkan_rynek_wlkp) +
+  tm_fill(col = "wtorny2017",
+          title = map_wlkp_legend,
+          breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000, 7000),
+          style = "fixed",
+          textNA = "No data",
+          colorNA = "white",
+          palette = "Reds") +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek wtórny")
+
+tmap_arrange(map_wlkp_rynek_pierwotny, map_wlkp_rynek_wtorny)
+
+cat("Średnia cena na rynku pierwotnym w roku 2017 była najwyzsza w powiecie miasta Poznan\ni okolicach. Sytuacja na rynku wtornym w roku 2017 jest bardziej wyrownana, chociaz powiat\nmiasta Poznan wciaz jest najdrozszy.")
+
+#Wpływ gęstości zaludnienia na średnią cenę mieszkania w powiatach województwa wielkopolskiego w roku 2017
+map_wlkp_legend = expression("Współczynnik wpływu gęstości zaludnienia na średnią cenę mieszkania w roku 2017")
+
+map_wlkp_rynek_pierwotny <- tm_shape(wsp) +
+  tm_fill(col = "pierwotny2017",
+          title = map_wlkp_legend,
+          breaks = c(0, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000),
+          style = "fixed",
+          textNA = "No data",
+          colorNA = "white",
+          palette = "Reds") +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek pierwotny")
+
+map_wlkp_rynek_wtorny <- tm_shape(wsp) +
+  tm_fill(col = "wtorny2017",
+          title = map_wlkp_legend,
+          breaks = c(0, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000),
+          style = "fixed",
+          textNA = "No data",
+          colorNA = "white",
+          palette = "Reds") +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek wtórny")
+
+tmap_arrange(map_wlkp_rynek_pierwotny, map_wlkp_rynek_wtorny)
+
+cat("Dokonując analizy pomiędzy gestoscia zaludnienia w roku 2017 a rynkiem pierwotnym i wtornym,\nmozna stwierdzic ze ceny mieszkan w powiatach silnie zaludnionych sa najwyzsze")
+
+#Cena za 1m2 mieszkania w roku 2018
+map_wlkp_legend = expression("Cena mieszkan (za 1m"^2*")")
+
+map_wlkp_rynek_pierwotny <- tm_shape(cena_mieszkan_rynek_wlkp) +
+  tm_fill(col = "pierwotny2018",
+          title = map_wlkp_legend,
+          breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000, 7000),
+          style = "fixed",
+          textNA = "No data",
+          colorNA = "white",
+          palette = "Reds") +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek pierwotny")
+
+map_wlkp_rynek_wtorny <- tm_shape(cena_mieszkan_rynek_wlkp) +
+  tm_fill(col = "wtorny2018",
+          title = map_wlkp_legend,
+          breaks = c(0, 1000, 2000, 3000, 4000, 5000, 6000, 7000),
+          style = "fixed",
+          textNA = "No data",
+          colorNA = "white",
+          palette = "Reds") +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek wtórny")
+
+tmap_arrange(map_wlkp_rynek_pierwotny, map_wlkp_rynek_wtorny)
+
+cat("Patrząc na średnią cene na rynku pierwotnym i wtornym w roku 2018 mozna stwierdzic,\nze sytuacja przedstawia sie bardzo podobnie jak w roku 2017")
+
+#Wpływ gęstości zaludnienia na średnią cenę mieszkania w powiatach województwa wielkopolskiego w roku 2018
+map_wlkp_legend = expression("Współczynnik wpływu gęstości zaludnienia na średnią cenę mieszkania w roku 2018")
+
+map_wlkp_rynek_pierwotny <- tm_shape(wsp) +
+  tm_fill(col = "pierwotny2018",
+          title = map_wlkp_legend,
+          breaks = c(0, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000),
+          style = "fixed",
+          textNA = "No data",
+          colorNA = "white",
+          palette = "Reds") +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek pierwotny")
+
+map_wlkp_rynek_wtorny <- tm_shape(wsp) +
+  tm_fill(col = "wtorny2018",
+          title = map_wlkp_legend,
+          breaks = c(0, 1000000, 2000000, 3000000, 4000000, 5000000, 6000000, 7000000),
+          style = "fixed",
+          textNA = "No data",
+          colorNA = "white",
+          palette = "Reds") +
+  tm_borders(col = "black", alpha = 0.5) +
+  tm_xlab("Rynek wtórny")
+
+tmap_arrange(map_wlkp_rynek_pierwotny, map_wlkp_rynek_wtorny)
+
+cat("Dokonując analizy pomiędzy gestoscia zaludnienia w roku 2018 rynkiem pierwotnym i wtornym,\nmozna rowniez stwierdzic ze sytuacja przedstawia sie bardzo podobnie jak w roku 2017")
+```

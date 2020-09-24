@@ -13,6 +13,7 @@ library(spData)
 library(spDataLarge)
 library(dplyr)
 library(ggplot2)
+library(knitr)
 ```
 
 # Praca domowa 1
@@ -40,7 +41,7 @@ nrow(world1)
 
 ## Zadanie 4
 ```{r}
-worldSlov<- world %>%
+worldSlov= world %>%
 filter(type == "Sovereign country")
 ggplot(worldSlov, aes(x = area_km2)) + geom_histogram()
 ```
@@ -68,14 +69,63 @@ new_raster = raster(raster_filepath)
 hist(new_raster, maxpixels=212505, main = "Rozkład wartości obrazu")
 ```
 
-# Zajecia 2, zadanie 1
+# Zajecia 2
 ## Zadanie 1
 ```{r}
-punkt <- st_point(c(19, 53)) %>% st_sfc(crs = 
+punkt = st_point(c(19, 53)) %>% st_sfc(crs = 
 st_crs(world)) %>% st_sf()
 ggplot() +
   geom_sf(data = world) + 
   geom_sf(data = punkt, size = 1, col = 'red') + 
   theme_light()
+```
+
+# Praca domowa 3
+
+## Zadanie 1, 2, 3
+
+```{r}
+Poland = world %>% filter(name_long=='Poland')
+
+Polygon = st_polygon(list(rbind(c(14,55),c(24,55),c(24,49),c(14,49),c(14,55))))
+Kwadrat = st_sfc(Polygon, crs = st_crs(world))
+
+Wisla_linestring = st_linestring(rbind(c(18.946808, 54.354193), c(18.735939, 53.477512), c(18.111901, 53.117029),
+  c(20.625013, 52.421425), c(21.790289, 51.553142), c(21.688874, 50.659114), c(19.944729, 50.050815),
+  c(19.241540, 50.057391), c(18.779162, 49.778298), c(18.906641, 49.614388)))
+Wisla = st_sfc(Wisla_linestring, crs = st_crs(world))
+
+Poland %>% ggplot() +
+  geom_sf(data=Kwadrat) +
+  geom_sf() + 
+  geom_sf(data=Wisla)
+```
+
+## Zadanie 4
+
+```{r}
+Poland %>% 
+  select(name_long, area_km2) %>% 
+  st_set_geometry(NULL) %>% 
+  kable()
+```
+
+## Zadanie 5
+
+# Zajecia 3
+
+```{r}
+DEM.Poland <-getData('alt', country='POL', mask=TRUE)
+plot(DEM.Poland)
+
+max.dem <- max(DEM.Poland[ ], na.rm = T)
+min.dem <- min(DEM.Poland[ ], na.rm = T)
+
+DEM.Poland.reclass <- reclassify(x = DEM.Poland,
+                                 rcl = matrix(c(min.dem - 1,0,1,
+                                                0, max.dem,0),
+                                              ncol=3,byrow=T))
+
+plot(DEM.Poland.reclass)
 ```
 

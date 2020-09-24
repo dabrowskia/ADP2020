@@ -1,0 +1,16 @@
+---
+title: "Zajecia3"
+author: "Bartosz Pawlak"
+date: "9 05 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Zadanie 1
+
+```{r cars}
+load("../../../data/ratajeNieruchomosci2.Rdata")
+```
