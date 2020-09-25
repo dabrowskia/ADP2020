@@ -1,5 +1,5 @@
 ---
-title: "Wpływ gęstości zaludnienia na średnią cenę mieszkania w powiatach województwa wielkopolskiego w latach 2017-2018"
+title: "Gęstość zaludnienia względem średniej ceny mieszkania w powiatach województwa wielkopolskiego w latach 2017-2018"
 author: "Budny Michał, Pawlak Bartosz"
 date: "14 Czerwiec 2020"
 output: pdf_document
