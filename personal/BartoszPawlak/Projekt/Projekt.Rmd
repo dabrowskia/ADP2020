@@ -134,16 +134,6 @@ wielkopolska_centroidy
 # Wizualizacja wojewodztwa wielkopolskiego zostanie wykorzystana do wizualizacji cen mieszkan na rynku pierwotnym i wtórnym
 ```
 
-```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
-## Mapa wysokościowa województwa wielkopolskiego
-wielkopolska_powiaty$JPT_KOD_JE <- as.numeric(wielkopolska_powiaty$JPT_KOD_JE)
-wielkopolska_powiaty.transformed <- st_transform(wielkopolska_powiaty, 4326)
-wielkopolska_powiaty.rasterized <- rasterize(wielkopolska_powiaty.transformed, DEM.Poland, field = 'JPT_KOD_JE')
-wielkopolska_wysokosc <- tm_shape(wielkopolska_powiaty.rasterized) + tm_raster()
-
-wielkopolska_wysokosc
-```
-
 # Wpływ gęstości zaludnienia na średnią cenę mieszkania w powiatach województwa wielkopolskiego w latach 2017-2018
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 # prepare data
