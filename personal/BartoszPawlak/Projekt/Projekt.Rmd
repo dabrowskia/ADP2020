@@ -32,10 +32,9 @@ Ogolny_zaludnienie = read.csv("Ogolny_zaludnienie.csv", sep = ";", encoding = "U
 ## Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 # Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w roku 2017
-ogolny2017 <- ggplot(dane_mieszkan_rynek_wlkp,
-  aes(x=as.factor(Nazwa),
-  y=as.factor(ogolny2017))) +
-  geom_col(fill = "red", colour = "black") +
+ogolny2017 <- dane_mieszkan_rynek_wlkp %>% 
+  ggplot(aes(fct_reorder(Nazwa,ogolny2017), ogolny2017)) +
+  geom_col(fill = "red", colour = "black", stat = "identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(title = 'Średnia cena za 1 m2 mieszkania w roku 2017',
        x= "Powiat",
@@ -46,14 +45,14 @@ plot(ogolny2017)
 cat("Najdrozsze ceny mieszkan w roku 2017 znajdowaly sie w powiecie miasta Poznan (ok. 5812 zl za 1m2),\nnajtansze ceny mieszkan w roku 2017 znajdowaly sie w powiecie Kaliskim (ok. 1548 zl za 1m2)")
 
 # Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w roku 2018
-ogolny2018 <- ggplot(dane_mieszkan_rynek_wlkp,
-  aes(x=as.factor(Nazwa),
-  y=as.factor(ogolny2018))) +
-  geom_col(fill = "blue", colour = "black") +
+ogolny2018 <- dane_mieszkan_rynek_wlkp %>% 
+  ggplot(aes(fct_reorder(Nazwa,ogolny2018), ogolny2018)) +
+  geom_col(fill = "blue", colour = "black", stat = "identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(title = 'Średnia cena za 1 m2 mieszkania w roku 2018',
+  labs(title = 'Średnia cena za 1 m2 mieszkania w roku 2017',
        x= "Powiat",
-       y = "Cena za m2")
+       y = "Cena za m2",
+       fill = "Dose (mg)")
 plot(ogolny2018)
 
 cat("Najdrozsze ceny mieszkan w roku 2018 znajdowaly się rowniez w powiecie miasta Poznan\n(ok. 6147 zl za 1m2), rowniez najtansze ceny mieszkan w roku 2018\nznajdowaly sie w powiecie Kaliskim (ok. 2106 zl za 1m2)")
@@ -64,7 +63,7 @@ names(Ogolny)[names(Ogolny) == "ogolny2018"] <- "Rok 2018"
 
 #Porównanie średniej ceny za 1m2 mieszkania w powiatach województwa wielkopolskiego w latach 2017/2018
 Ogolny %>% melt %>%
-  ggplot(aes(as.factor(Nazwa), value, fill=variable))+geom_col(position='dodge') +
+  ggplot(aes(Nazwa, value, fill=variable))+geom_col(position='dodge') +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(title = 'Średnia cena za 1 m2 mieszkania w latach 2017/2018',
     x= "Powiat",
@@ -79,7 +78,7 @@ cat("Porownując ze sobą rok 2017 i 2018 można zaobserwować ze ceny mieszkan\
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 DEM.Poland <-getData('alt', country='POL', mask=TRUE)
 
-powiaty <- st_read("D:/1. Studia/2. Magisterka/4. semestr/2. Analiza Danych Przestrzennych/1. Projekt/1. Gotowy — kopia/Projekt/Powiaty.shp", stringsAsFactors = F)
+powiaty <- st_read("D:/1. Studia/2. Magisterka/4. semestr/2. Analiza Danych Przestrzennych/1. Projekt/1. Gotowy — kopia — kopia/Projekt/Powiaty.shp", stringsAsFactors = F)
 ```
 
 ## Podział administracyjny Polski
@@ -93,8 +92,8 @@ plot(powiaty.rasterized)
 # W nastepnych etapach projektu wykorzystamy ta wizualizacje do stworzenia wizualizacji województwa wielkopolskiego
 ```
 
-## Podział administracyjny wojewodztw (z wysokoscia nad poziomem morza)
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+# Podział administracyjny wojewodztw (z wysokoscia nad poziomem morza)
 powiaty$JPT_KOD_JE <- as.numeric(powiaty$JPT_KOD_JE)
 powiaty.transformed <- st_transform(powiaty, 4326)
 powiaty.rasterized <- rasterize(powiaty.transformed, DEM.Poland,
@@ -119,8 +118,8 @@ wielkopolska_centroidy
 # Wizualizacja wojewodztwa wielkopolskiego zostanie wykorzystana do wizualizacji cen mieszkan na rynku pierwotnym i wtórnym
 ```
 
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 ## Mapa wysokościowa województwa wielkopolskiego
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 wielkopolska_powiaty$JPT_KOD_JE <- as.numeric(wielkopolska_powiaty$JPT_KOD_JE)
 wielkopolska_powiaty.transformed <- st_transform(wielkopolska_powiaty, 4326)
 wielkopolska_powiaty.rasterized <- rasterize(wielkopolska_powiaty.transformed, DEM.Poland, field = 'JPT_KOD_JE')
