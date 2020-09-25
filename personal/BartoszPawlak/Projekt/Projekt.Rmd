@@ -97,12 +97,13 @@ powiaty <- st_read("", stringsAsFactors = F)
 ```
 
 ## Podział administracyjny Polski
-```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
+```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 powiaty$JPT_KOD_JE <- as.numeric(powiaty$JPT_KOD_JE)
 powiaty.transformed <- st_transform(powiaty, 4326)
 powiaty.rasterized <- rasterize(powiaty.transformed, DEM.Poland,
                                 field = 'JPT_KOD_JE', fun = mean)
-plot(powiaty.rasterized)
+
+plot(powiaty.rasterized, legend=FALSE)
 
 # W nastepnych etapach projektu wykorzystamy ta wizualizacje do stworzenia wizualizacji województwa wielkopolskiego
 ```
