@@ -72,13 +72,28 @@ Ogolny %>% melt %>%
   scale_fill_manual(values=c("red", "blue"))
 
 cat("Porownując ze sobą rok 2017 i 2018 można zaobserwować ze ceny mieszkan\nmiast powiatowych w roku 2018 wzrosły w stosunku do roku 2017.\nW pozostałych powiatach roznice sa niewielkie")
+
+dane_mieszkan_rynek_wlkp <- dane_mieszkan_rynek_wlkp%>%mutate(Roznica=(ogolny2017-ogolny2018))
+
+#Róznica średniej ceny za 1m2 mieszkania w powiatach województwa wielkopolskiego w latach 2017/2018
+Roznica <- dane_mieszkan_rynek_wlkp %>% 
+  ggplot(aes(fct_reorder(Nazwa,Roznica), Roznica)) +
+  geom_col(fill = "red", colour = "black", stat = "identity") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(title = 'Róznica średniej ceny za 1m2 mieszkania w latach 2017/2018',
+       x= "Powiat",
+       y = "Cena za m2",
+       fill = "Dose (mg)")
+plot(Roznica)
+
+cat("Porownując ze sobą rok 2017 i 2018 mozna swierdzic ze najwiekszy wzrost cen\n mieszkan nastapil w powiacie kaliskim oraz Kaliszu. Ceny mieszkan w powiacie\n wrzesinskim stały sie mniejszew 2018 roku.")
 ```
 
 # Pobieranie danych, wizualizacja analizy strefowej dla Polski
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 DEM.Poland <-getData('alt', country='POL', mask=TRUE)
 
-powiaty <- st_read("D:/1. Studia/2. Magisterka/4. semestr/2. Analiza Danych Przestrzennych/1. Projekt/1. Gotowy — kopia — kopia/Projekt/Powiaty.shp", stringsAsFactors = F)
+powiaty <- st_read("", stringsAsFactors = F)
 ```
 
 ## Podział administracyjny Polski
