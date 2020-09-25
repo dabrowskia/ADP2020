@@ -97,7 +97,7 @@ powiaty <- st_read("", stringsAsFactors = F)
 ```
 
 ## Podział administracyjny Polski
-```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
+```{r message=FALSE, warning=FALSE, include=FALSE, paged.print=FALSE}
 powiaty$JPT_KOD_JE <- as.numeric(powiaty$JPT_KOD_JE)
 powiaty.transformed <- st_transform(powiaty, 4326)
 powiaty.rasterized <- rasterize(powiaty.transformed, DEM.Poland,
