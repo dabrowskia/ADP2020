@@ -32,7 +32,7 @@ Ogolny_zaludnienie = read.csv("Ogolny_zaludnienie.csv", sep = ";", encoding = "U
 ## Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego
 ```{r echo=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE}
 # Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w roku 2017
-ogolny2017 <- dane_mieszkan_rynek_wlkp %>% 
+ogolny2017 <- dane_mieszkan_rynek_wlkp %>%
   ggplot(aes(fct_reorder(Nazwa,ogolny2017), ogolny2017)) +
   geom_col(fill = "red", colour = "black", stat = "identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -45,7 +45,7 @@ plot(ogolny2017)
 cat("Najdrozsze ceny mieszkan w roku 2017 znajdowaly sie w powiecie miasta Poznan (ok. 5812 zl za 1m2),\nnajtansze ceny mieszkan w roku 2017 znajdowaly sie w powiecie Kaliskim (ok. 1548 zl za 1m2)")
 
 # Średnia cena za 1 m2 mieszkania w powiatach województwa wielkopolskiego w roku 2018
-ogolny2018 <- dane_mieszkan_rynek_wlkp %>% 
+ogolny2018 <- dane_mieszkan_rynek_wlkp %>%
   ggplot(aes(fct_reorder(Nazwa,ogolny2018), ogolny2018)) +
   geom_col(fill = "blue", colour = "black", stat = "identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -76,7 +76,7 @@ cat("Porownując ze sobą rok 2017 i 2018 można zaobserwować ze ceny mieszkan\
 dane_mieszkan_rynek_wlkp <- dane_mieszkan_rynek_wlkp%>%mutate(Roznica=(ogolny2017-ogolny2018))
 
 #Róznica średniej ceny za 1m2 mieszkania w powiatach województwa wielkopolskiego w latach 2017/2018
-Roznica <- dane_mieszkan_rynek_wlkp %>% 
+Roznica <- dane_mieszkan_rynek_wlkp %>%
   ggplot(aes(fct_reorder(Nazwa,Roznica), Roznica)) +
   geom_col(fill = "red", colour = "black", stat = "identity") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
@@ -156,7 +156,13 @@ cena_mieszkan_rynek_wlkp <- wielkopolska_powiaty %>% left_join(dane_mieszkan_ryn
 Ogolny_zaludnienie <- Ogolny_zaludnienie[,c("Nazwa","Rok2017", "Rok2018")]
 #merge 'dane_mieszkan_rynek_wlkp' with 'Ogolny_zaludnienie'
 wsp <- merge(x = dane_mieszkan_rynek_wlkp, y = Ogolny_zaludnienie, by = "Nazwa", all = TRUE)
+
+# Keep dataframe
+Merged <- wsp
+
+#merge 'dane_mieszkan_rynek_wlkp' with 'Ogolny_zaludnienie'
 wsp <- tbl_df(wsp)
+
 #Processing coefficients (update columns)
 wsp <- wsp%>%mutate(pierwotny2017=(Rok2017*pierwotny2017)/2)
 wsp <- wsp%>%mutate(wtorny2017=(Rok2017*wtorny2017)/2)
@@ -226,6 +232,23 @@ tmap_arrange(map_wlkp_rynek_pierwotny, map_wlkp_rynek_wtorny)
 
 cat("Dokonując analizy pomiędzy gestoscia zaludnienia w roku 2017 a rynkiem pierwotnym i wtornym,\nmozna stwierdzic ze ceny mieszkan w powiatach silnie zaludnionych sa najwyzsze")
 
+# Gęstość zaludnienia względem ceny, rok 2017
+merge_pierwotny <- ggplot(data = Merged, aes(x = Rok2017, y = pierwotny2017)) + 
+  geom_point(color = 'red') +
+  stat_smooth(method = 'lm') +
+  labs(title = 'Gęstość zaludnienia względem ceny - rynek pierwotny, rok 2017',
+       x= "Gęstość zaludnienia - 2017",
+       y = "Rynek pierwotny - 2017")
+
+merge_wtorny <- ggplot(data = Merged, aes(x = Rok2017, y = wtorny2017)) + 
+  geom_point(color = 'red') +
+  stat_smooth(method = 'lm') +
+  labs(title = 'Gęstość zaludnienia względem ceny - rynek wtorny, rok 2017',
+       x= "Gęstość zaludnienia - 2017",
+       y = "Rynek wtorny - 2017")
+
+grid.arrange(merge_pierwotny, merge_wtorny)
+
 #Cena za 1m2 mieszkania w roku 2018
 map_wlkp_legend = expression("Cena mieszkan (za 1m"^2*")")
 
@@ -283,4 +306,21 @@ map_wlkp_rynek_wtorny <- tm_shape(wsp) +
 tmap_arrange(map_wlkp_rynek_pierwotny, map_wlkp_rynek_wtorny)
 
 cat("Dokonując analizy pomiędzy gestoscia zaludnienia w roku 2018 rynkiem pierwotnym i wtornym,\nmozna rowniez stwierdzic ze sytuacja przedstawia sie bardzo podobnie jak w roku 2017")
+
+# Gęstość zaludnienia względem ceny, rok 2018
+merge_pierwotny <- ggplot(data = Merged, aes(x = Rok2018, y = pierwotny2018)) + 
+  geom_point(color = 'red') +
+  stat_smooth(method = 'lm') +
+  labs(title = 'Gęstość zaludnienia względem ceny - rynek pierwotny, rok 2018',
+       x= "Gęstość zaludnienia - 2018",
+       y = "Rynek pierwotny - 2018")
+
+merge_wtorny <- ggplot(data = Merged, aes(x = Rok2018, y = wtorny2018)) + 
+  geom_point(color = 'red') +
+  stat_smooth(method = 'lm') +
+  labs(title = 'Gęstość zaludnienia względem ceny - rynek wtorny, rok 2018',
+       x= "Gęstość zaludnienia - 2018",
+       y = "Rynek wtorny - 2018")
+
+grid.arrange(merge_pierwotny, merge_wtorny)
 ```
